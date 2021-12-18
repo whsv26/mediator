@@ -2,27 +2,11 @@
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Fp\Collections\Map;
-use Fp\Functional\Option\Option;
-use Fp\Streams\Stream;
-use PhpParser\Comment\Doc;
-use PhpParser\Node\Name;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\ParserFactory;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RegexIterator;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use Whsv26\Mediator\Contract\CommandHandlerInterface;
-use Whsv26\Mediator\Contract\QueryHandlerInterface;
-
-use function Fp\classOf;
-use function Fp\Collection\firstOf;
-use function Fp\Collection\head;
-use function Fp\Json\regExpMatch;
+use Whsv26\Mediator\Parsing\RoutingMapParser;
 
 /**
  * @psalm-type TQuery = class-string
