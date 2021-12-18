@@ -1,0 +1,25 @@
+{
+    "name": "whsv26/mediator",
+    "type": "symfony-bundle",
+    "require": {
+        "whsv26/functional": "^4.9",
+        "nikic/php-parser": "^4.13"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^4.15",
+        "symfony/dependency-injection": "^6.0",
+        "symfony/config": "^6.0",
+        "symfony/http-kernel": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Whsv26\\Mediator\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "whsv26",
+            "email": "whsv26@gmail.com"
+        }
+    ]
+}
