@@ -1,19 +1,17 @@
 <?php
 
-namespace Dummy;
+namespace Dummy\Sub;
 
+use Dummy\DummyQueryOne;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
-use Fp\Functional\Option\Option;
-
-
 /**
- * @implements QueryHandlerInterface<bool, DummyQuery>
+ * @implements QueryHandlerInterface<bool, DummyQueryOne>
  */
-class DummyQueryHandler implements QueryHandlerInterface
+class DummyQueryHandlerOne implements QueryHandlerInterface
 {
     /**
-     * @param DummyQuery $query
+     * @param DummyQueryOne $query
      * @return bool
      */
     public function handle(mixed $query): bool

@@ -69,17 +69,17 @@ class RoutingMapParser
             $namespaceStmt = Option::fromNullable($ast)
                 ->flatMap(fn(array $stmts) => firstOf($stmts, Namespace_::class));
 
+            $namespace = $namespaceStmt
+                ->flatMap(fn(Namespace_ $stmt) => Option::fromNullable($stmt->name))
+                ->map(fn(Name $name) => implode('\\', $name->parts))
+                ->getOrElse('');
+
             $uses = $namespaceStmt
                 ->toArrayList(fn(Namespace_ $stmt) => new ArrayList($stmt->stmts))
                 ->filterOf(Use_::class)
                 ->map(fn(Use_ $use) => $this->parseUse($use))
                 ->reduce(fn($acc, $cur) => array_merge($acc, $cur))
                 ->getOrElse([]);
-
-            $namespace = $namespaceStmt
-                ->flatMap(fn(Namespace_ $stmt) => Option::fromNullable($stmt->name))
-                ->map(fn(Name $name) => implode('\\', $name->parts))
-                ->getOrElse('');
 
             $classStmt = yield $namespaceStmt
                 ->flatMap(fn(Namespace_ $stmt) => firstOf($stmt->stmts, Class_::class));

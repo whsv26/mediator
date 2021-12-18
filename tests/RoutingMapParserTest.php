@@ -1,7 +1,9 @@
 <?php
 
-use Dummy\DummyQuery;
-use Dummy\DummyQueryHandler;
+use Dummy\DummyQueryHandlerTwo;
+use Dummy\DummyQueryOne;
+use Dummy\Sub\DummyQueryHandlerOne;
+use Dummy\Sub\DummyQueryTwo;
 use PHPUnit\Framework\TestCase;
 use Whsv26\Mediator\Parsing\RoutingMapParser;
 
@@ -12,6 +14,11 @@ class RoutingMapParserTest extends TestCase
         $parser = new RoutingMapParser();
         $routingMap = $parser->parseDirRecursive(__DIR__ . '/Dummy');
 
-        $this->assertEquals([DummyQuery::class => DummyQueryHandler::class], $routingMap);
+        $expected = [
+            DummyQueryOne::class => DummyQueryHandlerOne::class,
+            DummyQueryTwo::class => DummyQueryHandlerTwo::class,
+        ];
+
+        $this->assertEquals($expected, $routingMap);
     }
 }
