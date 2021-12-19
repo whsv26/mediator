@@ -17,6 +17,11 @@
             "Whsv26\\Mediator\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Whsv26\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "whsv26",
