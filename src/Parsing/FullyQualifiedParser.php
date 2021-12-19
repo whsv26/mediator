@@ -52,11 +52,11 @@ class FullyQualifiedParser
         }
 
         if (str_contains($class, '\\')) {
-            $class_parts = explode('\\', $class);
-            $first_namespace = array_shift($class_parts);
+            $classParts = explode('\\', $class);
+            $firstNamespace = array_shift($classParts);
 
-            if (isset($uses[strtolower($first_namespace)])) {
-                return $uses[strtolower($first_namespace)] . '\\' . implode('\\', $class_parts);
+            if (isset($uses[strtolower($firstNamespace)])) {
+                return $uses[strtolower($firstNamespace)] . '\\' . implode('\\', $classParts);
             }
         } elseif (isset($uses[strtolower($class)])) {
             return $uses[strtolower($class)];

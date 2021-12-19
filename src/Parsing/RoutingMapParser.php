@@ -3,13 +3,12 @@
 namespace Whsv26\Mediator\Parsing;
 
 use Fp\Collections\ArrayList;
-use Fp\Collections\HashMap;
-use Fp\Collections\Map;
 use Fp\Functional\Option\Option;
 use Fp\Streams\Stream;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
@@ -17,13 +16,15 @@ use PhpParser\Node\Stmt\UseUse;
 use PhpParser\ParserFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use RegexIterator;
+use SplFileInfo;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
+
 use function Fp\classOf;
-use function Fp\Collection\filterOf;
 use function Fp\Collection\firstOf;
 use function Fp\Collection\head;
+use function Fp\Evidence\proveNonEmptyString;
+use function Fp\Evidence\proveString;
 use function Fp\Json\regExpMatch;
 
 /**
@@ -36,6 +37,8 @@ use function Fp\Json\regExpMatch;
  */
 class RoutingMapParser
 {
+    private const REGEXP_REQUEST_TYPE = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
+
     /**
      * @return array<THandled, THandler>
      */
@@ -43,11 +46,11 @@ class RoutingMapParser
     {
         $directories = new RecursiveDirectoryIterator($dir);
         $files = new RecursiveIteratorIterator($directories);
-        $phpFiles = new RegexIterator($files, '/^.+\.php$/i', RegexIterator::GET_MATCH);
 
-        return Stream::emits($phpFiles)
-            ->filter(fn($files) => is_iterable($files))
-            ->flatMap(fn(array $files) => $files)
+        return Stream::emits($files)
+            ->filterOf(SplFileInfo::class)
+            ->filter(fn(SplFileInfo $info) => 'php' === $info->getExtension())
+            ->filterMap(fn(SplFileInfo $info) => proveString($info->getRealPath()))
             ->filterMap(fn(string $path) => $this->parseFile($path))
             ->toHashMap(fn(array $pair) => $pair)
             ->toAssocArray()
@@ -64,25 +67,12 @@ class RoutingMapParser
                 ->create(ParserFactory::PREFER_PHP7)
                 ->parse(file_get_contents($path));
 
-            $tagRegExp = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
+            $stmts = yield Option::fromNullable($ast);
+            $namespaceStmt = yield firstOf($stmts, Namespace_::class);
+            $classStmt = yield firstOf($namespaceStmt->stmts, Class_::class);
 
-            $namespaceStmt = Option::fromNullable($ast)
-                ->flatMap(fn(array $stmts) => firstOf($stmts, Namespace_::class));
-
-            $namespace = $namespaceStmt
-                ->flatMap(fn(Namespace_ $stmt) => Option::fromNullable($stmt->name))
-                ->map(fn(Name $name) => implode('\\', $name->parts))
-                ->getOrElse('');
-
-            $uses = $namespaceStmt
-                ->toArrayList(fn(Namespace_ $stmt) => new ArrayList($stmt->stmts))
-                ->filterOf(Use_::class)
-                ->map(fn(Use_ $use) => $this->parseUse($use))
-                ->reduce(fn($acc, $cur) => array_merge($acc, $cur))
-                ->getOrElse([]);
-
-            $classStmt = yield $namespaceStmt
-                ->flatMap(fn(Namespace_ $stmt) => firstOf($stmt->stmts, Class_::class));
+            $namespace = $this->parseNamespace($namespaceStmt);
+            $uses = $this->parseUses($namespaceStmt);
 
             yield Option::some($classStmt)
                 ->map(fn(Class_ $class) => $class->implements)
@@ -101,19 +91,39 @@ class RoutingMapParser
             $handledClass = yield Option::some($classStmt)
                 ->flatMap(fn(Class_ $class) => Option::fromNullable($class->getDocComment()))
                 ->map(fn(Doc $doc) => $doc->getText())
-                ->flatMap(fn(string $doc) => regExpMatch($tagRegExp, $doc, 1))
+                ->flatMap(fn(string $doc) => regExpMatch(self::REGEXP_REQUEST_TYPE, $doc, 1))
                 ->map(fn(string $cg) => FullyQualifiedParser::fromString($cg, $namespace, $uses));
 
             return [$handledClass, $handlerClass];
         });
     }
 
+    private function parseNamespace(Namespace_ $namespaceStmt): string
+    {
+        return Option::fromNullable($namespaceStmt->name)
+            ->map(fn(Name $name) => implode('\\', $name->parts))
+            ->getOrElse('');
+    }
+
+    /**
+     * @param Namespace_ $namespaceStmt
+     * @return array<lowercase-string, string>
+     */
+    private function parseUses(Namespace_ $namespaceStmt): array
+    {
+        /** @var array<lowercase-string, string> */
+        return Stream::emits($namespaceStmt->stmts)
+            ->filterOf(Use_::class)
+            ->map(fn(Use_ $use) => $this->parseUse($use))
+            ->reduce(fn(array $acc, $cur) => array_merge($acc, $cur))
+            ->getOrElse([]);
+    }
 
     /**
      * @param Use_ $stmt
      * @return array<lowercase-string, string>
      */
-    public function parseUse(Use_ $stmt): array
+    private function parseUse(Use_ $stmt): array
     {
         return Stream::emits($stmt->uses)
             ->filter(function (UseUse $use) use ($stmt) {

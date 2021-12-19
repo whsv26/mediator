@@ -1,9 +1,13 @@
 <?php
 
-use Dummy\DummyQueryHandlerTwo;
-use Dummy\DummyQueryOne;
-use Dummy\Sub\DummyQueryHandlerOne;
-use Dummy\Sub\DummyQueryTwo;
+namespace Whsv26\Tests;
+
+use Whsv26\Tests\Dummy\DummyCommandOne;
+use Whsv26\Tests\Dummy\DummyQueryHandlerTwo;
+use Whsv26\Tests\Dummy\DummyQueryOne;
+use Whsv26\Tests\Dummy\Sub\DummyCommandHandlerOne;
+use Whsv26\Tests\Dummy\Sub\DummyQueryHandlerOne;
+use Whsv26\Tests\Dummy\Sub\DummyQueryTwo;
 use PHPUnit\Framework\TestCase;
 use Whsv26\Mediator\Parsing\RoutingMapParser;
 
@@ -17,6 +21,7 @@ class RoutingMapParserTest extends TestCase
         $expected = [
             DummyQueryOne::class => DummyQueryHandlerOne::class,
             DummyQueryTwo::class => DummyQueryHandlerTwo::class,
+            DummyCommandOne::class => DummyCommandHandlerOne::class,
         ];
 
         $this->assertEquals($expected, $routingMap);
