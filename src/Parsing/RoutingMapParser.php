@@ -95,6 +95,7 @@ class RoutingMapParser
     }
 
     /**
+     * @param  array<UseAlias, UseFullyQualified> $uses
      * @return Option<Unit>
      */
     private function proveHandlerClass(Class_ $classStmt, string $namespace, array $uses): Option
@@ -117,7 +118,7 @@ class RoutingMapParser
      */
     private function parseUses(Namespace_ $namespaceStmt): array
     {
-        /** @var array<lowercase-string, string> */
+        /** @var array<UseAlias, UseFullyQualified> */
         return Stream::emits($namespaceStmt->stmts)
             ->filterOf(Use_::class)
             ->map(fn(Use_ $use) => $this->parseUse($use))
