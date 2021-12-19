@@ -6,9 +6,8 @@ namespace Whsv26\Mediator\Contract;
 
 /**
  * @template TResponse
- * @extends RequestInterface<TResponse>
  */
-interface QueryInterface extends RequestInterface
+interface RequestInterface
 {
 
 }

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Whsv26\Mediator\Contract;
 
 /**
- * @template TResult
+ * @template TResponse
+ * @extends RequestInterface<TResponse>
  */
-interface CommandInterface
+interface CommandInterface extends RequestInterface
 {
 
 }
