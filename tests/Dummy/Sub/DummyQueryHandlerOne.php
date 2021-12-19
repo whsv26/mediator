@@ -1,8 +1,8 @@
 <?php
 
-namespace Dummy\Sub;
+namespace Whsv26\Tests\Dummy\Sub;
 
-use Dummy\DummyQueryOne;
+use Whsv26\Tests\Dummy\DummyQueryOne;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
 /**

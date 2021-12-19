@@ -1,8 +1,8 @@
 <?php
 
-namespace Dummy;
+namespace Whsv26\Tests\Dummy;
 
-use Dummy\Sub\DummyQueryTwo;
+use Whsv26\Tests\Dummy\Sub\DummyQueryTwo;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
 /**

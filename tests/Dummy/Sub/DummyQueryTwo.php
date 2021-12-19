@@ -1,6 +1,6 @@
 <?php
 
-namespace Dummy\Sub;
+namespace Whsv26\Tests\Dummy\Sub;
 
 use Whsv26\Mediator\Contract\QueryInterface;
 
