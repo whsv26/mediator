@@ -11,17 +11,17 @@ class ConfigSchema implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('mediator');
 
-        $treeBuilder->getRootNode()
-            ->fixXmlConfig('middleware')
-            ->children()
-                ->arrayNode('query')
-                ->cannotBeEmpty()
-                ->end()
-            ->children()
-                ->arrayNode('command')
-                ->cannotBeEmpty()
-                ->end()
-            ->end();
+//        $treeBuilder->getRootNode()
+//            ->fixXmlConfig('middleware')
+//            ->children()
+//                ->arrayNode('query')
+//                ->cannotBeEmpty()
+//                ->end()
+//            ->children()
+//                ->arrayNode('command')
+//                ->cannotBeEmpty()
+//                ->end()
+//            ->end();
 
         return $treeBuilder;
     }

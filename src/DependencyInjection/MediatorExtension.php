@@ -18,7 +18,7 @@ use Whsv26\Mediator\Parsing\RoutingMapParser;
  */
 class MediatorExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $configDir = new FileLocator(__DIR__ . '/../../config');
 
@@ -27,14 +27,12 @@ class MediatorExtension extends Extension
         $loader->load('services.php');
 
         // Apply our config schema to the given app's configs
-        $schema = new ConfigSchema();
-        $options = $this->processConfiguration($schema, $configs);
-
-        $routingMapParser = new RoutingMapParser();
-        $projectDir = $container->getParameter('kernel.project_dir');
-        $routingMap = $routingMapParser->parseDirRecursive($projectDir);
-
-//        $repo = $container->getDefinition(DocumentRepository::class);
-//        $repo->replaceArgument(0, $options['storageDir']);
+        // $schema = new ConfigSchema();
+        // $options = $this->processConfiguration($schema, $configs);
+        // $routingMapParser = new RoutingMapParser();
+        // $projectDir = $container->getParameter('kernel.project_dir');
+        // $routingMap = $routingMapParser->parseDirRecursive($projectDir);
+        // $repo = $container->getDefinition(DocumentRepository::class);
+        // $repo->replaceArgument(0, $options['storageDir']);
     }
 }
