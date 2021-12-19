@@ -4,13 +4,14 @@ namespace Whsv26\Mediator\Parsing;
 
 use PhpParser\Node\Name;
 
+/**
+ * @psalm-type UseAlias = lowercase-string
+ * @psalm-type UseFullyQualified = string
+ */
 class FullyQualifiedParser
 {
     /**
-     * @param Name $className
-     * @param string $namespace
-     * @param array<lowercase-string, string> $uses
-     * @return string
+     * @param array<UseAlias, UseFullyQualified> $uses
      */
     public static function fromName(
         Name $className,
@@ -37,10 +38,7 @@ class FullyQualifiedParser
     }
 
     /**
-     * @param string $class
-     * @param string $namespace
-     * @param array<lowercase-string, string> $uses
-     * @return string
+     * @param array<UseAlias, UseFullyQualified> $uses
      */
     public static function fromString(
         string $class,

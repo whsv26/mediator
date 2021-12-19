@@ -2,13 +2,12 @@
 
 namespace Whsv26\Mediator\Parsing;
 
-use Fp\Collections\ArrayList;
 use Fp\Functional\Option\Option;
+use Fp\Functional\Unit;
 use Fp\Streams\Stream;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
-use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
@@ -23,24 +22,22 @@ use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use function Fp\classOf;
 use function Fp\Collection\firstOf;
 use function Fp\Collection\head;
-use function Fp\Evidence\proveNonEmptyString;
 use function Fp\Evidence\proveString;
 use function Fp\Json\regExpMatch;
+use function Fp\unit;
 
 /**
- * @psalm-type TQuery = string
- * @psalm-type TCommand = string
- * @psalm-type THandled = TQuery|TCommand
- * @psalm-type TQueryHandler = string
- * @psalm-type TCommandHandler = string
- * @psalm-type THandler = TQueryHandler|TCommandHandler
+ * @psalm-type Request = string
+ * @psalm-type RequestHandler = string
+ * @psalm-type UseAlias = lowercase-string
+ * @psalm-type UseFullyQualified = string
  */
 class RoutingMapParser
 {
     private const REGEXP_REQUEST_TYPE = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
 
     /**
-     * @return array<THandled, THandler>
+     * @return array<Request, RequestHandler>
      */
     public function parseDirRecursive(string $dir): array
     {
@@ -58,7 +55,7 @@ class RoutingMapParser
     }
 
     /**
-     * @return Option<array{THandled, THandler}>
+     * @return Option<array{Request, RequestHandler}>
      */
     private function parseFile(string $path): Option
     {
@@ -74,27 +71,19 @@ class RoutingMapParser
             $namespace = $this->parseNamespace($namespaceStmt);
             $uses = $this->parseUses($namespaceStmt);
 
-            yield Option::some($classStmt)
-                ->map(fn(Class_ $class) => $class->implements)
-                ->filter(fn(array $implements) => 1 === count($implements))
-                ->flatMap(fn(array $implements) => head($implements))
-                ->map(fn(Name $name) => FullyQualifiedParser::fromName($name, $namespace, $uses))
-                ->filter(function (string $name) {
-                    return classOf($name, QueryHandlerInterface::class)
-                        || classOf($name, CommandHandlerInterface::class);
-                });
+            yield $this->proveHandlerClass($classStmt, $namespace, $uses);
 
-            $handlerClass = yield Option::some($classStmt)
+            $requestHandlerClass = yield Option::some($classStmt)
                 ->flatMap(fn(Class_ $class) => Option::fromNullable($class->name))
                 ->map(fn(Identifier $name) => $namespace . '\\' . $name);
 
-            $handledClass = yield Option::some($classStmt)
+            $requestClass = yield Option::some($classStmt)
                 ->flatMap(fn(Class_ $class) => Option::fromNullable($class->getDocComment()))
                 ->map(fn(Doc $doc) => $doc->getText())
                 ->flatMap(fn(string $doc) => regExpMatch(self::REGEXP_REQUEST_TYPE, $doc, 1))
                 ->map(fn(string $cg) => FullyQualifiedParser::fromString($cg, $namespace, $uses));
 
-            return [$handledClass, $handlerClass];
+            return [$requestClass, $requestHandlerClass];
         });
     }
 
@@ -106,8 +95,25 @@ class RoutingMapParser
     }
 
     /**
+     * @return Option<Unit>
+     */
+    private function proveHandlerClass(Class_ $classStmt, string $namespace, array $uses): Option
+    {
+        return Option::some($classStmt)
+            ->map(fn(Class_ $class) => $class->implements)
+            ->filter(fn(array $implements) => 1 === count($implements))
+            ->flatMap(fn(array $implements) => head($implements))
+            ->map(fn(Name $name) => FullyQualifiedParser::fromName($name, $namespace, $uses))
+            ->filter(function (string $name) {
+                return classOf($name, QueryHandlerInterface::class)
+                    || classOf($name, CommandHandlerInterface::class);
+            })
+            ->map(fn() => unit());
+    }
+
+    /**
      * @param Namespace_ $namespaceStmt
-     * @return array<lowercase-string, string>
+     * @return array<UseAlias, UseFullyQualified>
      */
     private function parseUses(Namespace_ $namespaceStmt): array
     {
@@ -121,7 +127,7 @@ class RoutingMapParser
 
     /**
      * @param Use_ $stmt
-     * @return array<lowercase-string, string>
+     * @return array<UseAlias, UseFullyQualified>
      */
     private function parseUse(Use_ $stmt): array
     {
