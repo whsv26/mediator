@@ -4,18 +4,19 @@ namespace Whsv26\Tests\Dummy\Sub;
 
 use Whsv26\Tests\Dummy\DummyQueryOne;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
+use Whsv26\Tests\Dummy\Foo;
 
 /**
  * @implements QueryHandlerInterface<bool, DummyQueryOne>
  */
-class DummyQueryHandlerOne implements QueryHandlerInterface
+class DummyQueryOneHandler implements QueryHandlerInterface
 {
     /**
      * @param DummyQueryOne $query
-     * @return bool
+     * @return Foo
      */
-    public function handle(mixed $query): bool
+    public function handle(mixed $query): Foo
     {
-        throw new \RuntimeException('???');
+        return new Foo(1);
     }
 }

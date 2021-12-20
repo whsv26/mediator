@@ -8,14 +8,14 @@ use Whsv26\Mediator\Contract\QueryHandlerInterface;
 /**
  * @implements QueryHandlerInterface<int, DummyQueryTwo>
  */
-class DummyQueryHandlerTwo implements QueryHandlerInterface
+class DummyQueryTwoHandler implements QueryHandlerInterface
 {
     /**
      * @param DummyQueryTwo $query
-     * @return bool
+     * @return int
      */
-    public function handle(mixed $query): bool
+    public function handle(mixed $query): int
     {
-        throw new \RuntimeException('???');
+        return 1;
     }
 }
