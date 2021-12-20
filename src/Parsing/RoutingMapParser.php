@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\ParserFactory;
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -41,8 +42,11 @@ class RoutingMapParser
      */
     public function parseDirRecursive(string $dir): array
     {
-        $directories = new RecursiveDirectoryIterator($dir);
-        $files = new RecursiveIteratorIterator($directories);
+        $allowedDirsFilter = fn($current) => !$current->isDir() || $current->getFilename() !== 'vendor';
+
+        $dirs = new RecursiveDirectoryIterator($dir);
+        $allowedDirs = new RecursiveCallbackFilterIterator($dirs, $allowedDirsFilter);
+        $files = new RecursiveIteratorIterator($allowedDirs);
 
         return Stream::emits($files)
             ->filterOf(SplFileInfo::class)
