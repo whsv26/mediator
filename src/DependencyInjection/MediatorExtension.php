@@ -30,11 +30,12 @@ class MediatorExtension extends Extension
         // Apply our config schema to the given app's configs
         // $schema = new ConfigSchema();
         // $options = $this->processConfiguration($schema, $configs);
-        // $repo = $container->getDefinition(DocumentRepository::class);
-        // $repo->replaceArgument(0, $options['storageDir']);
 
         $routingMapParser = new RoutingMapParser();
         $projectDir = $container->getParameter('kernel.project_dir');
+
+        assert(is_string($projectDir));
+
         $routingMap = $routingMapParser->parseDirRecursive($projectDir);
 
         $container
