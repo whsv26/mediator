@@ -5,10 +5,11 @@ declare(strict_types=1);
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;
+use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
+use Whsv26\Tests\Dummy\Sub\DummyCommandOneHandler;
 use Whsv26\Tests\Dummy\Sub\DummyQueryOneHandler;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 return static function (ContainerConfigurator $configurator) {
     $services = $configurator->services();
@@ -20,12 +21,9 @@ return static function (ContainerConfigurator $configurator) {
     $services
         ->set(MediatorInterface::class, Mediator::class)
         ->public()
-        ->args([
-            service('service_container'),
-            abstract_arg('Request to RequestHandler routing map')
-        ]);
+        ->args([abstract_arg('Request to RequestHandler service locator')]);
 
-    $services
-        ->set(DummyQueryOneHandler::class)
-        ->public();
+    $services->set(DummyQueryOneHandler::class);
+    $services->set(DummyQueryTwoHandler::class);
+    $services->set(DummyCommandOneHandler::class);
 };

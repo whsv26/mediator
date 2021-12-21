@@ -31,14 +31,14 @@ use function Fp\unit;
  * @psalm-type UseAlias = lowercase-string
  * @psalm-type UseFullyQualified = string
  */
-class RoutingMapParser
+class HandlerMapParser
 {
     private const REGEXP_REQUEST_TYPE = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
 
     /**
-     * @return array<Request, RequestHandler>
+     * @return Stream<array{Request, RequestHandler}>
      */
-    public function parseDirRecursive(string $dir): array
+    public function parseDirRecursive(string $dir): Stream
     {
         $directory = new RecursiveDirectoryIterator($dir);
         $fileFilter = new PhpFileFilterIterator($directory);
@@ -47,10 +47,7 @@ class RoutingMapParser
         return Stream::emits($files)
             ->filterOf(SplFileInfo::class)
             ->filterMap(fn(SplFileInfo $info) => proveString($info->getRealPath()))
-            ->filterMap(fn(string $path) => $this->parseFile($path))
-            ->toHashMap(fn(array $pair) => $pair)
-            ->toAssocArray()
-            ->get();
+            ->filterMap(fn(string $path) => $this->parseFile($path));
     }
 
     /**

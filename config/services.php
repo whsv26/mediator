@@ -7,7 +7,6 @@ use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 return static function (ContainerConfigurator $configurator) {
     $services = $configurator->services();
@@ -18,8 +17,5 @@ return static function (ContainerConfigurator $configurator) {
 
     $services
         ->set(MediatorInterface::class, Mediator::class)
-        ->args([
-            service('service_container'),
-            abstract_arg('Request to RequestHandler routing map')
-        ]);
+        ->args([abstract_arg('Request to RequestHandler service locator')]);
 };
