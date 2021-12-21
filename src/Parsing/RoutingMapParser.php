@@ -10,10 +10,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Use_;
-use PhpParser\Node\Stmt\UseUse;
 use PhpParser\ParserFactory;
-use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -23,6 +20,7 @@ use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use function Fp\classOf;
 use function Fp\Collection\firstOf;
 use function Fp\Collection\head;
+use function Fp\Evidence\proveClassString;
 use function Fp\Evidence\proveString;
 use function Fp\Json\regExpMatch;
 use function Fp\unit;
@@ -42,15 +40,12 @@ class RoutingMapParser
      */
     public function parseDirRecursive(string $dir): array
     {
-        $allowedDirsFilter = fn($current) => !$current->isDir() || $current->getFilename() !== 'vendor';
-
-        $dirs = new RecursiveDirectoryIterator($dir);
-        $allowedDirs = new RecursiveCallbackFilterIterator($dirs, $allowedDirsFilter);
-        $files = new RecursiveIteratorIterator($allowedDirs);
+        $directory = new RecursiveDirectoryIterator($dir);
+        $fileFilter = new PhpFileFilterIterator($directory);
+        $files = new RecursiveIteratorIterator($fileFilter);
 
         return Stream::emits($files)
             ->filterOf(SplFileInfo::class)
-            ->filter(fn(SplFileInfo $info) => 'php' === $info->getExtension())
             ->filterMap(fn(SplFileInfo $info) => proveString($info->getRealPath()))
             ->filterMap(fn(string $path) => $this->parseFile($path))
             ->toHashMap(fn(array $pair) => $pair)
@@ -66,88 +61,64 @@ class RoutingMapParser
         return Option::do(function () use ($path) {
             $ast = (new ParserFactory())
                 ->create(ParserFactory::PREFER_PHP7)
-                ->parse(file_get_contents($path));
+                ->parse(file_get_contents($path)) ?? [];
 
-            $stmts = yield Option::fromNullable($ast);
-            $namespaceStmt = yield firstOf($stmts, Namespace_::class);
+            $namespaceStmt = yield firstOf($ast, Namespace_::class);
             $classStmt = yield firstOf($namespaceStmt->stmts, Class_::class);
 
-            $namespace = $this->parseNamespace($namespaceStmt);
-            $uses = $this->parseUses($namespaceStmt);
+            $fqp = new FullyQualifiedParser($namespaceStmt);
 
-            yield $this->proveHandlerClass($classStmt, $namespace, $uses);
+            /**
+             * Prove that class implements
+             * Query or Command handler interface
+             */
+            yield $this->proveRequestHandlerClass($classStmt, $fqp);
 
-            $requestHandlerClass = yield Option::some($classStmt)
-                ->flatMap(fn(Class_ $class) => Option::fromNullable($class->name))
-                ->map(fn(Identifier $name) => $namespace . '\\' . $name);
-
-            $requestClass = yield Option::some($classStmt)
-                ->flatMap(fn(Class_ $class) => Option::fromNullable($class->getDocComment()))
-                ->map(fn(Doc $doc) => $doc->getText())
-                ->flatMap(fn(string $doc) => regExpMatch(self::REGEXP_REQUEST_TYPE, $doc, 1))
-                ->map(fn(string $cg) => FullyQualifiedParser::fromString($cg, $namespace, $uses));
-
-            return [$requestClass, $requestHandlerClass];
+            return [
+                yield $this->parseRequestClass($classStmt, $fqp),
+                yield $this->parseRequestHandlerClass($classStmt, $fqp)
+            ];
         });
     }
 
-    private function parseNamespace(Namespace_ $namespaceStmt): string
+    /**
+     * @return Option<class-string>
+     */
+    private function parseRequestHandlerClass(Class_ $classStmt, FullyQualifiedParser $fqp): Option
     {
-        return Option::fromNullable($namespaceStmt->name)
-            ->map(fn(Name $name) => implode('\\', $name->parts))
-            ->getOrElse('');
+        return Option::some($classStmt)
+            ->flatMap(fn(Class_ $class) => Option::fromNullable($class->name))
+            ->map(fn(Identifier $name) => $fqp->parse($name))
+            ->flatMap(fn(string $fqcn) => proveClassString($fqcn));
     }
 
     /**
-     * @param  array<UseAlias, UseFullyQualified> $uses
+     * @return Option<class-string>
+     */
+    private function parseRequestClass(Class_ $classStmt, FullyQualifiedParser $fqp): Option
+    {
+        return Option::some($classStmt)
+            ->flatMap(fn(Class_ $class) => Option::fromNullable($class->getDocComment()))
+            ->map(fn(Doc $doc) => $doc->getText())
+            ->flatMap(fn(string $doc) => regExpMatch(self::REGEXP_REQUEST_TYPE, $doc, 1))
+            ->map(fn(string $capturingGroup) => $fqp->parse($capturingGroup))
+            ->flatMap(fn(string $fqcn) => proveClassString($fqcn));
+    }
+
+    /**
      * @return Option<Unit>
      */
-    private function proveHandlerClass(Class_ $classStmt, string $namespace, array $uses): Option
+    private function proveRequestHandlerClass(Class_ $classStmt, FullyQualifiedParser $fqp): Option
     {
         return Option::some($classStmt)
             ->map(fn(Class_ $class) => $class->implements)
             ->filter(fn(array $implements) => 1 === count($implements))
             ->flatMap(fn(array $implements) => head($implements))
-            ->map(fn(Name $name) => FullyQualifiedParser::fromName($name, $namespace, $uses))
+            ->map(fn(Name $name) => $fqp->parse($name))
             ->filter(function (string $name) {
                 return classOf($name, QueryHandlerInterface::class)
                     || classOf($name, CommandHandlerInterface::class);
             })
             ->map(fn() => unit());
-    }
-
-    /**
-     * @param Namespace_ $namespaceStmt
-     * @return array<UseAlias, UseFullyQualified>
-     */
-    private function parseUses(Namespace_ $namespaceStmt): array
-    {
-        /** @var array<UseAlias, UseFullyQualified> */
-        return Stream::emits($namespaceStmt->stmts)
-            ->filterOf(Use_::class)
-            ->map(fn(Use_ $use) => $this->parseUse($use))
-            ->reduce(fn(array $acc, $cur) => array_merge($acc, $cur))
-            ->getOrElse([]);
-    }
-
-    /**
-     * @param Use_ $stmt
-     * @return array<UseAlias, UseFullyQualified>
-     */
-    private function parseUse(Use_ $stmt): array
-    {
-        return Stream::emits($stmt->uses)
-            ->filter(function (UseUse $use) use ($stmt) {
-                $useType = ($use->type !== Use_::TYPE_UNKNOWN ? $use->type : $stmt->type);
-                return Use_::TYPE_NORMAL === $useType;
-            })
-            ->toHashMap(function(UseUse $use) {
-                $usePath = implode('\\', $use->name->parts);
-                $useAlias = $use->alias ? $use->alias->name : $use->name->getLast();
-
-                return [strtolower($useAlias), $usePath];
-            })
-            ->toAssocArray()
-            ->get();
     }
 }

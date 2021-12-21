@@ -16,14 +16,23 @@ class RoutingMapParserTest extends TestCase
     public function testParsing(): void
     {
         $parser = new RoutingMapParser();
-        $routingMap = $parser->parseDirRecursive(__DIR__ . '/Dummy');
 
-        $expected = [
-            DummyQueryOne::class => DummyQueryOneHandler::class,
-            DummyQueryTwo::class => DummyQueryTwoHandler::class,
-            DummyCommandOne::class => DummyCommandOneHandler::class,
-        ];
+        $this->assertEquals(
+            [
+                DummyQueryOne::class => DummyQueryOneHandler::class,
+                DummyQueryTwo::class => DummyQueryTwoHandler::class,
+                DummyCommandOne::class => DummyCommandOneHandler::class,
+            ],
+            $parser->parseDirRecursive(__DIR__ . '/Dummy')
+        );
 
-        $this->assertEquals($expected, $routingMap);
+        $this->assertEquals(
+            [
+                DummyQueryOne::class => DummyQueryOneHandler::class,
+                DummyQueryTwo::class => DummyQueryTwoHandler::class,
+                DummyCommandOne::class => DummyCommandOneHandler::class,
+            ],
+            $parser->parseDirRecursive(__DIR__ . '/../')
+        );
     }
 }
