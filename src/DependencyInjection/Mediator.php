@@ -6,8 +6,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
 use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
-use Whsv26\Mediator\Exception\UnroutedCommandException;
-use Whsv26\Mediator\Exception\UnroutedQueryException;
 use Whsv26\Mediator\Exception\UnroutedRequestException;
 
 /**
@@ -31,19 +29,18 @@ class Mediator implements MediatorInterface
      */
     public function send(RequestInterface $request): mixed
     {
-        if (array_key_exists($request::class, $this->routingMap)) {
-            $handlerClass = $this->routingMap[$request::class];
-            $handler = $this->container->get($handlerClass)
-                ?? throw new RequestHandlerNotFoundException($handlerClass);
-
-            /**
-             * @var TResponse
-             * @psalm-suppress MixedMethodCall
-             */
-            return $handler->handle($request);
-
-        } else {
+        if (!array_key_exists($request::class, $this->routingMap)) {
             throw new UnroutedRequestException($request::class);
         }
+
+        $handlerClass = $this->routingMap[$request::class];
+        $handler = $this->container->get($handlerClass)
+            ?? throw new RequestHandlerNotFoundException($handlerClass);
+
+        /**
+         * @var TResponse
+         * @psalm-suppress MixedMethodCall
+         */
+        return $handler->handle($request);
     }
 }

@@ -63,20 +63,20 @@ class RoutingMapParser
                 ->create(ParserFactory::PREFER_PHP7)
                 ->parse(file_get_contents($path)) ?? [];
 
-            $namespaceStmt = yield firstOf($ast, Namespace_::class);
-            $classStmt = yield firstOf($namespaceStmt->stmts, Class_::class);
+            $namespace = yield firstOf($ast, Namespace_::class);
+            $class = yield firstOf($namespace->stmts, Class_::class);
 
-            $fqp = new FullyQualifiedParser($namespaceStmt);
+            $fullyQualifiedParser = new FullyQualifiedParser($namespace);
 
             /**
              * Prove that class implements
              * Query or Command handler interface
              */
-            yield $this->proveRequestHandlerClass($classStmt, $fqp);
+            yield $this->proveRequestHandlerClass($class, $fullyQualifiedParser);
 
             return [
-                yield $this->parseRequestClass($classStmt, $fqp),
-                yield $this->parseRequestHandlerClass($classStmt, $fqp)
+                yield $this->parseRequestClass($class, $fullyQualifiedParser),
+                yield $this->parseRequestHandlerClass($class, $fullyQualifiedParser)
             ];
         });
     }
