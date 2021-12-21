@@ -25,7 +25,12 @@ class MediatorExtension extends Extension
 
         // Load the bundle's service declarations
         $loader = new PhpFileLoader($container, $configDir);
+
         $loader->load('services.php');
+
+        if ('test' === $_ENV['APP_ENV']) {
+            $loader->load('services_test.php');
+        }
 
         // Apply our config schema to the given app's configs
         // $schema = new ConfigSchema();
