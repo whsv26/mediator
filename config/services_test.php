@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Fp\Collections\ArrayList;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;
 use Whsv26\Tests\Dummy\DummyMiddlewareOne;
 use Whsv26\Tests\Dummy\DummyMiddlewareTwo;
 use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
+use Whsv26\Tests\Dummy\DummyService;
 use Whsv26\Tests\Dummy\Sub\DummyCommandOneHandler;
 use Whsv26\Tests\Dummy\Sub\DummyQueryOneHandler;
 
@@ -33,4 +33,8 @@ return static function (ContainerConfigurator $configurator) {
     $services->set(DummyQueryOneHandler::class);
     $services->set(DummyQueryTwoHandler::class);
     $services->set(DummyCommandOneHandler::class);
+    $services->set(DummyMiddlewareOne::class);
+    $services->set(DummyMiddlewareTwo::class);
+    $services->set(DummyService::class)
+        ->args([1]);
 };

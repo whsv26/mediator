@@ -10,6 +10,10 @@ use Whsv26\Mediator\Contract\RequestInterface;
 
 class DummyMiddlewareOne implements MiddlewareInterface
 {
+    public function __construct(
+        private DummyService $dummyService
+    ) { }
+
     /**
      * @template TResponse
      * @template TRequest of RequestInterface<TResponse>
@@ -21,11 +25,11 @@ class DummyMiddlewareOne implements MiddlewareInterface
      */
     public function handle(mixed $request, Closure $next): mixed
     {
-        echo self::class . ' before' . PHP_EOL;
+        echo $this->dummyService->x . self::class . ' before' . PHP_EOL;
 
         $result = $next($request);
 
-        echo self::class . ' after' . PHP_EOL;
+        echo $this->dummyService->x . self::class . ' after' . PHP_EOL;
 
         return $result;
     }
