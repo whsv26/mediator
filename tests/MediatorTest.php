@@ -35,5 +35,6 @@ class MediatorTest extends TestCase
         $mediator = $container->get(MediatorInterface::class);
         $response = $mediator->send(new DummyQueryOne());
         $this->assertEquals(1, $response->value);
+        $this->expectOutputString("before_query_middleware after_query_middleware");
     }
 }

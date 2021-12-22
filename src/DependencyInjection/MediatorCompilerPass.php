@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Fp\Collections\ArrayList;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
-use Whsv26\Tests\Dummy\DummyMiddlewareOne;
-use Whsv26\Tests\Dummy\DummyMiddlewareTwo;
 
-use function Symfony\Component\DependencyInjection\Loader\Configurator\iterator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service_locator;
 
 class MediatorCompilerPass implements CompilerPassInterface
 {
+    use PriorityTaggedServiceTrait;
+
     public function process(ContainerBuilder $container): void
     {
         $handlerMapParser = new HandlerMapParser();
@@ -31,16 +30,22 @@ class MediatorCompilerPass implements CompilerPassInterface
             ->map(fn(array $pair) => [$pair[0], new Reference($pair[1])])
             ->toAssocArray(fn(array $pair) => $pair);
 
-        $middlewares = ArrayList::collect([DummyMiddlewareOne::class, DummyMiddlewareTwo::class])
-            ->map(fn($fqcn) => new Reference($fqcn))
-            ->toArray();
+        $commandMiddlewares = $this->findAndSortTaggedServices(
+            'mediator.command_middleware',
+            $container
+        );
+
+        $queryMiddlewares = $this->findAndSortTaggedServices(
+            'mediator.query_middleware',
+            $container
+        );
 
         $container
             ->getDefinition(MediatorInterface::class)
             ->setArguments([
                 service_locator($handlerMap),
-                iterator($middlewares),
-                iterator($middlewares),
+                new IteratorArgument($commandMiddlewares),
+                new IteratorArgument($queryMiddlewares),
             ]);
     }
 }

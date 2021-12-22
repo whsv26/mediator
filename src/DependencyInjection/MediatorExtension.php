@@ -7,8 +7,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
+use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
+use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
 
@@ -35,17 +37,9 @@ class MediatorExtension extends Extension
             $loader->load('services_test.php');
         }
 
-        $container
-            ->registerForAutoconfiguration(CommandHandlerInterface::class)
-            ->addTag('mediator.command_handler');
+        $this->addTags($container);
 
-        $container
-            ->registerForAutoconfiguration(QueryHandlerInterface::class)
-            ->addTag('mediator.query_handler');
-
-        $options = $this->mergeConfigurations($configs);
-
-         $x = '';
+//        $options = $this->mergeConfigurations($configs);
     }
 
     /**
@@ -61,5 +55,24 @@ class MediatorExtension extends Extension
     {
         /** @var MediatorConfig */
         return $this->processConfiguration(new ConfigSchema(), $configs);
+    }
+
+    private function addTags(ContainerBuilder $container): void
+    {
+        $container
+            ->registerForAutoconfiguration(CommandHandlerInterface::class)
+            ->addTag('mediator.command_handler');
+
+        $container
+            ->registerForAutoconfiguration(QueryHandlerInterface::class)
+            ->addTag('mediator.query_handler');
+
+        $container
+            ->registerForAutoconfiguration(CommandMiddlewareInterface::class)
+            ->addTag('mediator.command_middleware');
+
+        $container
+            ->registerForAutoconfiguration(QueryMiddlewareInterface::class)
+            ->addTag('mediator.query_middleware');
     }
 }

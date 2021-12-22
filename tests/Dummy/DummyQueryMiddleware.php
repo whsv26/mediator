@@ -5,15 +5,11 @@ declare(strict_types=1);
 namespace Whsv26\Tests\Dummy;
 
 use Closure;
-use Whsv26\Mediator\Contract\MiddlewareInterface;
+use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
 
-class DummyMiddlewareOne implements MiddlewareInterface
+class DummyQueryMiddleware implements QueryMiddlewareInterface
 {
-    public function __construct(
-        private DummyService $dummyService
-    ) { }
-
     /**
      * @template TResponse
      * @template TRequest of RequestInterface<TResponse>
@@ -25,11 +21,11 @@ class DummyMiddlewareOne implements MiddlewareInterface
      */
     public function handle(mixed $request, Closure $next): mixed
     {
-        echo $this->dummyService->x . self::class . ' before' . PHP_EOL;
+        echo 'before_query_middleware ';
 
         $result = $next($request);
 
-        echo $this->dummyService->x . self::class . ' after' . PHP_EOL;
+        echo 'after_query_middleware';
 
         return $result;
     }

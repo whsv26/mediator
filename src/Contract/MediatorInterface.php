@@ -2,8 +2,6 @@
 
 namespace Whsv26\Mediator\Contract;
 
-use Whsv26\Mediator\Handled;
-
 interface MediatorInterface
 {
     /**
