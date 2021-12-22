@@ -6,9 +6,10 @@ use Fp\Collections\ArrayList;
 use Fp\Collections\Seq;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
+use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
-use Whsv26\Mediator\Contract\MiddlewareInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
+use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
 use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
 
@@ -22,8 +23,8 @@ class Mediator implements MediatorInterface
     private Seq $queryPipes;
 
     /**
-     * @param Seq<MiddlewareInterface> $commandPipes
-     * @param Seq<MiddlewareInterface> $queryPipes
+     * @param iterable<CommandMiddlewareInterface> $commandPipes
+     * @param iterable<QueryMiddlewareInterface> $queryPipes
      */
     public function __construct(
         private ServiceLocator $locator,

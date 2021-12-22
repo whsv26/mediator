@@ -37,7 +37,7 @@ class MediatorExtension extends Extension
             $loader->load('services_test.php');
         }
 
-        $this->addTags($container);
+        $this->registerForAutoconfiguration($container);
 
 //        $options = $this->mergeConfigurations($configs);
     }
@@ -57,7 +57,7 @@ class MediatorExtension extends Extension
         return $this->processConfiguration(new ConfigSchema(), $configs);
     }
 
-    private function addTags(ContainerBuilder $container): void
+    private function registerForAutoconfiguration(ContainerBuilder $container): void
     {
         $container
             ->registerForAutoconfiguration(CommandHandlerInterface::class)
