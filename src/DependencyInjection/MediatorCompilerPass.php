@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Whsv26\Mediator\DependencyInjection;
 
+use Fp\Collections\ArrayList;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
+use Whsv26\Tests\Dummy\DummyMiddlewareOne;
+use Whsv26\Tests\Dummy\DummyMiddlewareTwo;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service_locator;
 
@@ -28,6 +31,10 @@ class MediatorCompilerPass implements CompilerPassInterface
 
         $container
             ->getDefinition(MediatorInterface::class)
-            ->setArguments([service_locator($handlerMap)]);
+            ->setArguments([
+                service_locator($handlerMap),
+                ArrayList::collect([new DummyMiddlewareOne(), new DummyMiddlewareTwo()]),
+                ArrayList::collect([new DummyMiddlewareOne(), new DummyMiddlewareTwo()]),
+            ]);
     }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Fp\Collections\ArrayList;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;
@@ -17,5 +18,9 @@ return static function (ContainerConfigurator $configurator) {
 
     $services
         ->set(MediatorInterface::class, Mediator::class)
-        ->args([abstract_arg('Request to RequestHandler service locator')]);
+        ->args([
+            abstract_arg('Request to RequestHandler service locator'),
+            abstract_arg('Command middlewares'),
+            abstract_arg('Query middlewares'),
+        ]);
 };

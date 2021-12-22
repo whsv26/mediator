@@ -2,9 +2,12 @@
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Fp\Collections\Seq;
 use Symfony\Component\DependencyInjection\ServiceLocator;
+use Whsv26\Mediator\Contract\CommandHandlerInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
+use Whsv26\Mediator\Contract\MiddlewareInterface;
+use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
 use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
 
@@ -14,16 +17,21 @@ use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
  */
 class Mediator implements MediatorInterface
 {
+    /**
+     * @param Seq<MiddlewareInterface> $commandPipes
+     * @param Seq<MiddlewareInterface> $queryPipes
+     */
     public function __construct(
-        private ServiceLocator $locator
+        private ServiceLocator $locator,
+        private Seq $commandPipes,
+        private Seq $queryPipes,
     ) { }
 
     /**
      * @template TResponse
      * @param RequestInterface<TResponse> $request
      * @return TResponse
-     *
-     * @psalm-suppress MixedMethodCall, MixedAssignment
+     * @psalm-suppress all
      */
     public function send(RequestInterface $request): mixed
     {
@@ -33,9 +41,16 @@ class Mediator implements MediatorInterface
             throw new RequestHandlerNotFoundException();
         }
 
-        /**
-         * @var TResponse
-         */
-        return $handler->handle($request);
+        $pipes = match (true) {
+            $handler instanceof CommandHandlerInterface => $this->commandPipes,
+            $handler instanceof QueryHandlerInterface => $this->queryPipes,
+        };
+
+        $pipeline = $pipes->reverse()->fold(
+            fn($req) => $handler->handle($req),
+            fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
+        );
+
+        return $pipeline($request);
     }
 }
