@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace Whsv26\Tests\Dummy;
 
 use Closure;
+use Whsv26\Mediator\Contract\QueryInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
-use Whsv26\Mediator\Contract\RequestInterface;
 
 class DummyQueryMiddleware implements QueryMiddlewareInterface
 {
     /**
      * @template TResponse
-     * @template TRequest of RequestInterface<TResponse>
+     * @template TQuery of QueryInterface<TResponse>
      *
-     * @param TRequest $request
-     * @param Closure(TRequest): TResponse $next
+     * @param TQuery $query
+     * @param Closure(TQuery): TResponse $next
      *
      * @return TResponse
      */
-    public function handle(mixed $request, Closure $next): mixed
+    public function handle(QueryInterface $query, Closure $next): mixed
     {
         echo 'before_query_middleware ';
 
-        $result = $next($request);
+        $result = $next($query);
 
         echo 'after_query_middleware';
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Whsv26\Tests\Dummy;
 
 use Closure;
+use Whsv26\Mediator\Contract\CommandInterface;
 use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
-use Whsv26\Mediator\Contract\MiddlewareInterface;
 
 class DummyCommandMiddleware implements CommandMiddlewareInterface
 {
@@ -16,18 +16,18 @@ class DummyCommandMiddleware implements CommandMiddlewareInterface
 
     /**
      * @template TResponse
-     * @template TRequest of RequestInterface<TResponse>
+     * @template TCommand of CommandInterface<TResponse>
      *
-     * @param TRequest $request
-     * @param Closure(TRequest): TResponse $next
+     * @param TCommand $command
+     * @param Closure(TCommand): TResponse $next
      *
      * @return TResponse
      */
-    public function handle(mixed $request, Closure $next): mixed
+    public function handle(CommandInterface $command, Closure $next): mixed
     {
         echo $this->dummyService->x . self::class . ' before' . PHP_EOL;
 
-        $result = $next($request);
+        $result = $next($command);
 
         echo $this->dummyService->x . self::class . ' after' . PHP_EOL;
 
