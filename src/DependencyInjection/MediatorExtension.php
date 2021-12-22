@@ -43,8 +43,23 @@ class MediatorExtension extends Extension
             ->registerForAutoconfiguration(QueryHandlerInterface::class)
             ->addTag('mediator.query_handler');
 
-        // Apply our config schema to the given app's configs
-        // $schema = new ConfigSchema();
-        // $options = $this->processConfiguration($schema, $configs);
+        $options = $this->mergeConfigurations($configs);
+
+         $x = '';
+    }
+
+    /**
+     * @psalm-type MediatorConfig = array{
+     *     middlewares: list<array{
+     *         attribute: class-string,
+     *         middleware: string
+     *     }>
+     * }
+     * @return MediatorConfig
+     */
+    private function mergeConfigurations(array $configs): array
+    {
+        /** @var MediatorConfig */
+        return $this->processConfiguration(new ConfigSchema(), $configs);
     }
 }

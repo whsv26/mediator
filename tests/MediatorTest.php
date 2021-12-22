@@ -17,7 +17,19 @@ class MediatorTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', __DIR__.'/..');
         $container->addCompilerPass(new MediatorCompilerPass());
-        $extension->load([], $container);
+        $extension->load(
+            [
+                [
+                    'middlewares' => [
+                        [
+                            'attribute' => 'a1',
+                            'middleware' => 'm1',
+                        ]
+                    ]
+                ]
+            ],
+            $container
+        );
         $container->compile();
 
         $mediator = $container->get(MediatorInterface::class);
