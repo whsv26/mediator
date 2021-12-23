@@ -5,7 +5,7 @@ namespace Whsv26\Tests\Dummy;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
 /**
- * @implements QueryHandlerInterface<bool, DummyQueryOne>
+ * @implements QueryHandlerInterface<Foo, DummyQueryOne>
  */
 class DummyQueryOneHandler implements QueryHandlerInterface
 {

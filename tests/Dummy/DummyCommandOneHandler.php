@@ -16,6 +16,6 @@ class DummyCommandOneHandler implements CommandHandlerInterface
      */
     public function handle(mixed $command): Either
     {
-        return Either::cond(rand() === 0, true, false);
+        return Either::right(true);
     }
 }
