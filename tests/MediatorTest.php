@@ -23,7 +23,6 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->setParameter('kernel.project_dir', __DIR__.'/..');
         $container->addCompilerPass(new MediatorCompilerPass());
         $extension->load([], $container);
         $container->compile();
@@ -37,7 +36,6 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->setParameter('kernel.project_dir', __DIR__.'/..');
         $container->addCompilerPass(new MediatorCompilerPass());
         $extension->load([], $container);
         $container->compile();
@@ -51,7 +49,6 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->setParameter('kernel.project_dir', __DIR__.'/..');
         $container->addCompilerPass(new MediatorCompilerPass());
         $extension->load([], $container);
         $container->compile();
@@ -76,7 +73,6 @@ class MediatorTest extends TestCase
 
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->setParameter('kernel.project_dir', __DIR__.'/..');
         $container->addCompilerPass(new MediatorCompilerPass());
         $extension->load($configs, $container);
         $container->compile();

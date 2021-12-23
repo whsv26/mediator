@@ -17,4 +17,16 @@
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
         <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
     </plugins>
+    <issueHandlers>
+        <MissingClosureReturnType errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="src"/>
+            </errorLevel>
+        </MissingClosureReturnType>
+        <MissingClosureParamType errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="src"/>
+            </errorLevel>
+        </MissingClosureParamType>
+    </issueHandlers>
 </psalm>

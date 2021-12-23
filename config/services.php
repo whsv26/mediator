@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Fp\Collections\ArrayList;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;

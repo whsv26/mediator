@@ -17,10 +17,18 @@ use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
  * @internal
  * @psalm-type Request = class-string
  * @psalm-type RequestHandler = class-string
+ * @psalm-type RequestHandlerInterface = (CommandHandlerInterface|QueryHandlerInterface)
  */
 class Mediator implements MediatorInterface
 {
+    /**
+     * @var Seq<CommandMiddlewareInterface>
+     */
     private Seq $commandPipes;
+
+    /**
+     * @var Seq<QueryMiddlewareInterface>
+     */
     private Seq $queryPipes;
 
     /**
@@ -40,10 +48,12 @@ class Mediator implements MediatorInterface
      * @template TResponse
      * @param RequestInterface<TResponse> $request
      * @return TResponse
-     * @psalm-suppress all
      */
     public function send(RequestInterface $request): mixed
     {
+        /**
+         * @var null|RequestHandlerInterface $handler
+         */
         $handler = $this->locator->get($request::class);
 
         if (empty($handler)) {
@@ -55,11 +65,17 @@ class Mediator implements MediatorInterface
             $handler instanceof QueryHandlerInterface => $this->queryPipes,
         };
 
-        $pipeline = $pipes->reverse()->fold(
-            fn($req) => $handler->handle($req),
-            fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
-        );
+        /**
+         * @psalm-suppress MixedArgument
+         */
+        $pipeline = $pipes
+            ->reverse()
+            ->fold(
+                fn($req) => $handler->handle($req),
+                fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
+            );
 
+        /** @var TResponse */
         return $pipeline($request);
     }
 }
