@@ -2,6 +2,7 @@
 
 namespace Whsv26\Mediator\DependencyInjection;
 
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
@@ -21,6 +22,11 @@ use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
  */
 class MediatorExtension extends Extension
 {
+    public function getConfiguration(array $config, ContainerBuilder $container): ConfigurationInterface
+    {
+        return new Configuration();
+    }
+
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configDir = new FileLocator(__DIR__ . '/../../config');
