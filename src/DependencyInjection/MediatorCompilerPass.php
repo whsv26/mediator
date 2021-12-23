@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Fp\Functional\Option\Option;
 use Fp\Streams\Stream;
 use ReflectionClass;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
@@ -20,10 +19,9 @@ use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
 
-use function Fp\Callable\partialRight;
 use function Fp\Evidence\proveClassString;
 use function Fp\Evidence\proveString;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service_locator;
+use function Fp\Reflection\getReflectionClass;
 
 class MediatorCompilerPass implements CompilerPassInterface
 {
@@ -43,7 +41,7 @@ class MediatorCompilerPass implements CompilerPassInterface
         $handlerMap = Stream::emits($commandHandlers)
             ->appendedAll($queryHandlers)
             ->filterMap(fn(Reference $ref) => proveClassString((string) $ref))
-            ->filterMap(fn(string $id) => Option::try(fn() => new ReflectionClass($id)))
+            ->filterMap(fn(string $id) => getReflectionClass($id)->toOption())
             ->filterMap(fn(ReflectionClass $class) => proveString($class->getFileName()))
             ->filterMap(fn(string $file) => $handlerMapParser->parseFile($file))
             ->map(fn(array $pair) => [$pair[0], new Reference($pair[1])])

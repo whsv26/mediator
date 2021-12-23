@@ -19,7 +19,7 @@ use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
  * @psalm-type RequestHandler = class-string
  * @psalm-type RequestHandlerInterface = (CommandHandlerInterface|QueryHandlerInterface)
  */
-class Mediator implements MediatorInterface
+final class Mediator implements MediatorInterface
 {
     /**
      * @var Seq<CommandMiddlewareInterface>

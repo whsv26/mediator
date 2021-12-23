@@ -5,7 +5,7 @@ namespace Whsv26\Mediator\DependencyInjection;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
-class ConfigSchema implements ConfigurationInterface
+final class ConfigSchema implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -13,11 +13,17 @@ class ConfigSchema implements ConfigurationInterface
 
         $treeBuilder->getRootNode()
             ->children()
-                ->arrayNode('middlewares')
-                    ->arrayPrototype()
-                        ->children()
-                            ->scalarNode('attribute')->end()
-                            ->scalarNode('middleware')->end()
+                ->arrayNode('query')
+                    ->children()
+                        ->arrayNode('middlewares')
+                            ->scalarPrototype()->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('command')
+                    ->children()
+                        ->arrayNode('middlewares')
+                            ->scalarPrototype()->end()
                         ->end()
                     ->end()
                 ->end()

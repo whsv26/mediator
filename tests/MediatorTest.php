@@ -6,7 +6,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\MediatorCompilerPass;
 use Whsv26\Mediator\DependencyInjection\MediatorExtension;
+use Whsv26\Tests\Dummy\DummyCommandMiddleware;
 use Whsv26\Tests\Dummy\DummyCommandOne;
+use Whsv26\Tests\Dummy\DummyQueryMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryOne;
 use PHPUnit\Framework\TestCase;
 
@@ -62,12 +64,17 @@ class MediatorTest extends TestCase
     {
         $configs = [
             [
-                'middlewares' => [
-                    [
-                        'attribute' => 'a1',
-                        'middleware' => 'm1',
+                'query' => [
+                    'middlewares' => [
+                        DummyQueryMiddleware::class
                     ]
-                ]
+                ],
+                'command' => [
+                    'middlewares' => [
+                        DummyCommandMiddleware::class
+                    ]
+                ],
+
             ]
         ];
 

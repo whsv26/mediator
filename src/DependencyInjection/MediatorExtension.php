@@ -39,15 +39,17 @@ class MediatorExtension extends Extension
 
         $this->registerForAutoconfiguration($container);
 
-//        $options = $this->mergeConfigurations($configs);
+        $options = $this->mergeConfigurations($configs);
     }
 
     /**
      * @psalm-type MediatorConfig = array{
-     *     middlewares: list<array{
-     *         attribute: class-string,
-     *         middleware: string
-     *     }>
+     *     query: array{
+     *         middlewares: list<class-string>
+     *     },
+     *     command: array{
+     *         middlewares: list<class-string>
+     *     }
      * }
      * @return MediatorConfig
      */
