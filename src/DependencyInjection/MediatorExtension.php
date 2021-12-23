@@ -61,18 +61,18 @@ class MediatorExtension extends Extension
     {
         $container
             ->registerForAutoconfiguration(CommandHandlerInterface::class)
-            ->addTag('mediator.command_handler');
+            ->addTag(CommandHandlerInterface::TAG);
 
         $container
             ->registerForAutoconfiguration(QueryHandlerInterface::class)
-            ->addTag('mediator.query_handler');
+            ->addTag(QueryHandlerInterface::TAG);
 
         $container
             ->registerForAutoconfiguration(CommandMiddlewareInterface::class)
-            ->addTag('mediator.command_middleware');
+            ->addTag(CommandMiddlewareInterface::TAG);
 
         $container
             ->registerForAutoconfiguration(QueryMiddlewareInterface::class)
-            ->addTag('mediator.query_middleware');
+            ->addTag(QueryMiddlewareInterface::TAG);
     }
 }

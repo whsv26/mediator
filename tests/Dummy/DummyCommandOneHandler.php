@@ -1,10 +1,9 @@
 <?php
 
-namespace Whsv26\Tests\Dummy\Sub;
+namespace Whsv26\Tests\Dummy;
 
 use Fp\Functional\Either\Either;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
-use Whsv26\Tests\Dummy\DummyCommandOne;
 
 /**
  * @implements CommandHandlerInterface<Either<false, true>, DummyCommandOne>

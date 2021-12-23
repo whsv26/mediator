@@ -14,6 +14,7 @@ use Whsv26\Mediator\Contract\RequestInterface;
 use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
 
 /**
+ * @internal
  * @psalm-type Request = class-string
  * @psalm-type RequestHandler = class-string
  */

@@ -1,10 +1,8 @@
 <?php
 
-namespace Whsv26\Tests\Dummy\Sub;
+namespace Whsv26\Tests\Dummy;
 
-use Whsv26\Tests\Dummy\DummyQueryOne;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
-use Whsv26\Tests\Dummy\Foo;
 
 /**
  * @implements QueryHandlerInterface<bool, DummyQueryOne>

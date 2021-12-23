@@ -10,6 +10,8 @@ namespace Whsv26\Mediator\Contract;
  */
 interface CommandHandlerInterface
 {
+    public const TAG = 'mediator.command_handler';
+
     /**
      * @param TCommand $command
      * @return TResponse

@@ -10,6 +10,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -35,45 +36,51 @@ class HandlerMapParser
 {
     private const REGEXP_REQUEST_TYPE = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
 
-    /**
-     * @return Stream<array{Request, RequestHandler}>
-     */
-    public function parseDirRecursive(string $dir): Stream
-    {
-        $directory = new RecursiveDirectoryIterator($dir);
-        $fileFilter = new PhpFileFilterIterator($directory);
-        $files = new RecursiveIteratorIterator($fileFilter);
+    private Parser $parser;
 
-        return Stream::emits($files)
-            ->filterOf(SplFileInfo::class)
-            ->filterMap(fn(SplFileInfo $info) => proveString($info->getRealPath()))
-            ->filterMap(fn(string $path) => $this->parseFile($path));
+    public function __construct()
+    {
+        $this->parser = (new ParserFactory())
+            ->create(ParserFactory::PREFER_PHP7);
     }
 
     /**
      * @return Option<array{Request, RequestHandler}>
      */
-    private function parseFile(string $path): Option
+    public function parseFile(string $path): Option
     {
         return Option::do(function () use ($path) {
-            $ast = (new ParserFactory())
-                ->create(ParserFactory::PREFER_PHP7)
-                ->parse(file_get_contents($path)) ?? [];
-
-            $namespace = yield firstOf($ast, Namespace_::class);
-            $class = yield firstOf($namespace->stmts, Class_::class);
+            $namespace = yield proveString(file_get_contents($path))
+                ->map(fn(string $contents) => $this->parser->parse($contents))
+                ->filter(fn(?array $stmts) => $stmts !== null)
+                ->flatMap(fn(array $stmts) => firstOf($stmts, Namespace_::class));
 
             $fullyQualifiedParser = new FullyQualifiedParser($namespace);
 
-            /**
-             * Prove that class implements
-             * Query or Command handler interface
-             */
+            // Parse first class declaration
+            // in the file
+            $class = yield firstOf($namespace->stmts, Class_::class);
+
+            // Assert that class implements
+            // Query or Command handler interface
             yield $this->proveRequestHandlerClass($class, $fullyQualifiedParser);
 
+            // 1. Parse request handler fqcn
+            // 2. Parse request fqcn
+            // 3. Build Map entry which is array{TKey, TValue}
+            return yield $this->parseEntry($class, $fullyQualifiedParser);
+        });
+    }
+
+    /**
+     * @return Option<array{Request, RequestHandler}>
+     */
+    private function parseEntry(Class_ $classStmt, FullyQualifiedParser $fqp): Option
+    {
+        return Option::do(function () use ($classStmt, $fqp) {
             return [
-                yield $this->parseRequestClass($class, $fullyQualifiedParser),
-                yield $this->parseRequestHandlerClass($class, $fullyQualifiedParser)
+                yield $this->parseRequestClass($classStmt, $fqp),
+                yield $this->parseRequestHandlerClass($classStmt, $fqp)
             ];
         });
     }
@@ -103,6 +110,9 @@ class HandlerMapParser
     }
 
     /**
+     * Prove that class implements
+     * query or command handler interface
+     *
      * @return Option<Unit>
      */
     private function proveRequestHandlerClass(Class_ $classStmt, FullyQualifiedParser $fqp): Option

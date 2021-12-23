@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace Whsv26\Mediator\DependencyInjection;
 
+use Fp\Functional\Option\Option;
+use Fp\Streams\Stream;
+use ReflectionClass;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
+use Whsv26\Mediator\Contract\CommandHandlerInterface;
+use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
+use Whsv26\Mediator\Contract\QueryHandlerInterface;
+use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
 
+use function Fp\Callable\partialRight;
+use function Fp\Evidence\proveClassString;
+use function Fp\Evidence\proveString;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service_locator;
 
 class MediatorCompilerPass implements CompilerPassInterface
@@ -21,29 +32,27 @@ class MediatorCompilerPass implements CompilerPassInterface
     public function process(ContainerBuilder $container): void
     {
         $handlerMapParser = new HandlerMapParser();
-        $projectDir = $container->getParameter('kernel.project_dir');
 
-        assert(is_string($projectDir));
+        $findServices = fn(string $tag): array => $this->findAndSortTaggedServices($tag, $container);
 
-        $handlerMap = $handlerMapParser
-            ->parseDirRecursive($projectDir)
+        $commandMiddlewares = $findServices(CommandMiddlewareInterface::TAG);
+        $queryMiddlewares = $findServices(QueryMiddlewareInterface::TAG);
+        $commandHandlers = $findServices(CommandHandlerInterface::TAG);
+        $queryHandlers = $findServices(QueryHandlerInterface::TAG);
+
+        $handlerMap = Stream::emits($commandHandlers)
+            ->appendedAll($queryHandlers)
+            ->filterMap(fn(Reference $ref) => proveClassString((string) $ref))
+            ->filterMap(fn(string $id) => Option::try(fn() => new ReflectionClass($id)))
+            ->filterMap(fn(ReflectionClass $class) => proveString($class->getFileName()))
+            ->filterMap(fn(string $file) => $handlerMapParser->parseFile($file))
             ->map(fn(array $pair) => [$pair[0], new Reference($pair[1])])
             ->toAssocArray(fn(array $pair) => $pair);
-
-        $commandMiddlewares = $this->findAndSortTaggedServices(
-            'mediator.command_middleware',
-            $container
-        );
-
-        $queryMiddlewares = $this->findAndSortTaggedServices(
-            'mediator.query_middleware',
-            $container
-        );
 
         $container
             ->getDefinition(MediatorInterface::class)
             ->setArguments([
-                service_locator($handlerMap),
+                new ServiceLocatorArgument($handlerMap),
                 new IteratorArgument($commandMiddlewares),
                 new IteratorArgument($queryMiddlewares),
             ]);

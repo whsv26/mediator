@@ -2,14 +2,15 @@
 
 namespace Whsv26\Tests;
 
-use Whsv26\Tests\Dummy\DummyCommandOne;
-use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
-use Whsv26\Tests\Dummy\DummyQueryOne;
-use Whsv26\Tests\Dummy\Sub\DummyCommandOneHandler;
-use Whsv26\Tests\Dummy\Sub\DummyQueryOneHandler;
-use Whsv26\Tests\Dummy\Sub\DummyQueryTwo;
+use Fp\Collections\ArrayList;
 use PHPUnit\Framework\TestCase;
 use Whsv26\Mediator\Parsing\HandlerMapParser;
+use Whsv26\Tests\Dummy\DummyCommandOne;
+use Whsv26\Tests\Dummy\DummyCommandOneHandler;
+use Whsv26\Tests\Dummy\DummyQueryOne;
+use Whsv26\Tests\Dummy\DummyQueryOneHandler;
+use Whsv26\Tests\Dummy\DummyQueryTwo;
+use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
 
 class RoutingMapParserTest extends TestCase
 {
@@ -17,22 +18,19 @@ class RoutingMapParserTest extends TestCase
     {
         $parser = new HandlerMapParser();
 
-        $this->assertEquals(
-            [
-                DummyQueryOne::class => DummyQueryOneHandler::class,
-                DummyQueryTwo::class => DummyQueryTwoHandler::class,
-                DummyCommandOne::class => DummyCommandOneHandler::class,
-            ],
-            $parser->parseDirRecursive(__DIR__ . '/Dummy')->toAssocArray(fn($pair) => $pair)
-        );
+        $parsed = [
+            $parser->parseFile(__DIR__ . '/Dummy/DummyQueryOneHandler.php'),
+            $parser->parseFile(__DIR__ . '/Dummy/DummyQueryTwoHandler.php'),
+            $parser->parseFile(__DIR__ . '/Dummy/DummyCommandOneHandler.php'),
+        ];
 
         $this->assertEquals(
             [
-                DummyQueryOne::class => DummyQueryOneHandler::class,
-                DummyQueryTwo::class => DummyQueryTwoHandler::class,
-                DummyCommandOne::class => DummyCommandOneHandler::class,
+                [DummyQueryOne::class, DummyQueryOneHandler::class],
+                [DummyQueryTwo::class, DummyQueryTwoHandler::class],
+                [DummyCommandOne::class, DummyCommandOneHandler::class],
             ],
-            $parser->parseDirRecursive(__DIR__ . '/../')->toAssocArray(fn($pair) => $pair)
+            ArrayList::collect($parsed)->filterMap(fn($pair) => $pair)->toArray()
         );
     }
 }

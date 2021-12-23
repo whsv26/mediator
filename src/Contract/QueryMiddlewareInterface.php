@@ -8,6 +8,8 @@ use Closure;
 
 interface QueryMiddlewareInterface
 {
+    public const TAG = 'mediator.query_middleware';
+
     /**
      * @template TResponse
      * @template TQuery of QueryInterface<TResponse>

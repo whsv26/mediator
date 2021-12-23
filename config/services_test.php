@@ -9,8 +9,8 @@ use Whsv26\Tests\Dummy\DummyCommandMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
 use Whsv26\Tests\Dummy\DummyService;
-use Whsv26\Tests\Dummy\Sub\DummyCommandOneHandler;
-use Whsv26\Tests\Dummy\Sub\DummyQueryOneHandler;
+use Whsv26\Tests\Dummy\DummyCommandOneHandler;
+use Whsv26\Tests\Dummy\DummyQueryOneHandler;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
 

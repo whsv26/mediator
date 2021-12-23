@@ -10,6 +10,8 @@ namespace Whsv26\Mediator\Contract;
  */
 interface QueryHandlerInterface
 {
+    public const TAG = 'mediator.query_handler';
+
     /**
      * @param TQuery $query
      * @return TResponse
