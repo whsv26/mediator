@@ -8,11 +8,8 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
 use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
-use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
-use Whsv26\Mediator\Contract\RequestInterface;
-use Whsv26\Mediator\Parsing\HandlerMapParser;
 
 /**
  * @psalm-type TQuery = class-string
@@ -56,7 +53,7 @@ class MediatorExtension extends Extension
     private function mergeConfigurations(array $configs): array
     {
         /** @var MediatorConfig */
-        return $this->processConfiguration(new ConfigSchema(), $configs);
+        return $this->processConfiguration(new Configuration(), $configs);
     }
 
     private function registerForAutoconfiguration(ContainerBuilder $container): void
