@@ -16,6 +16,11 @@ class DummyQueryTwoHandler implements QueryHandlerInterface
      */
     public function handle(mixed $query): int
     {
+        return $this($query);
+    }
+
+    public function __invoke(DummyQueryTwo $query): int
+    {
         return 1;
     }
 }
