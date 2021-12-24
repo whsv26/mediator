@@ -32,6 +32,8 @@ class CreateUserCommand implements CommandInterface
 }
 
 /**
+ * NOTE: You need to register CreateUserCommandHandler as service
+ * 
  * @implements CommandHandlerInterface<Either<Rejection, Success>, CreateUserCommand>
  */
 class CreateUserCommandHandler implements CommandHandlerInterface
@@ -91,6 +93,8 @@ class FindUserQuery implements QueryInterface
 }
 
 /**
+ * NOTE: You need to register FindUserQueryHandler as service
+ * 
  * @implements QueryHandlerInterface<Option<User>, FindUserQuery>
  */
 class FindUserQueryHandler implements QueryHandlerInterface
@@ -118,12 +122,15 @@ class FindUserQueryHandler implements QueryHandlerInterface
 
 ## Middlewares
 1) Implement ```CommandMiddlewareInterface``` or ```QueryMiddlewareInterface```
-2) Enable middleware services in bundle config
+2) Register middleware class as service
+3) Enable middleware services in bundle config
 
 ```php
 
 /**
- * Example command middleware 
+ * Example command middleware
+ * 
+ * NOTE: You need to register TransactionalCommandMiddleware as service
  */
 class TransactionalCommandMiddleware implements CommandMiddlewareInterface
 {
