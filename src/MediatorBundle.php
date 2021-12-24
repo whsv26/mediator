@@ -8,9 +8,11 @@ use Whsv26\Mediator\DependencyInjection\MediatorCompilerPass;
 
 class MediatorBundle extends Bundle
 {
+    public const ALIAS = 'mediator';
+
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
-        $container->addCompilerPass(new MediatorCompilerPass());
+        $container->addCompilerPass(new MediatorCompilerPass($this->getContainerExtension()));
     }
 }

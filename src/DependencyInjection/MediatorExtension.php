@@ -2,6 +2,7 @@
 
 namespace Whsv26\Mediator\DependencyInjection;
 
+use Fp\Functional\Option\Option;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -19,9 +20,20 @@ use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
  * @psalm-type TQueryHandler = class-string
  * @psalm-type TCommandHandler = class-string
  * @psalm-type THandler = TQueryHandler|TCommandHandler
+ * @psalm-type MediatorConfig = array{
+ *     query: array{middlewares: list<class-string>},
+ *     command: array{middlewares: list<class-string>}
+ * }
  */
 class MediatorExtension extends Extension
 {
+    /**
+     * @param ?MediatorConfig $configs
+     */
+    public function __construct(
+        private ?array $configs = null
+    ) { }
+
     public function getConfiguration(array $config, ContainerBuilder $container): ConfigurationInterface
     {
         return new Configuration();
@@ -42,24 +54,12 @@ class MediatorExtension extends Extension
 
         $this->registerForAutoconfiguration($container);
 
-        $options = $this->mergeConfigurations($configs);
-    }
+        /**
+         * @var MediatorConfig $processedConfigs
+         */
+        $processedConfigs = $this->processConfiguration(new Configuration(), $configs);
 
-    /**
-     * @psalm-type MediatorConfig = array{
-     *     query: array{
-     *         middlewares: list<class-string>
-     *     },
-     *     command: array{
-     *         middlewares: list<class-string>
-     *     }
-     * }
-     * @return MediatorConfig
-     */
-    private function mergeConfigurations(array $configs): array
-    {
-        /** @var MediatorConfig */
-        return $this->processConfiguration(new Configuration(), $configs);
+        $this->configs = $processedConfigs;
     }
 
     private function registerForAutoconfiguration(ContainerBuilder $container): void
@@ -79,5 +79,13 @@ class MediatorExtension extends Extension
         $container
             ->registerForAutoconfiguration(QueryMiddlewareInterface::class)
             ->addTag(QueryMiddlewareInterface::TAG);
+    }
+
+    /**
+     * @return Option<MediatorConfig>
+     */
+    public function getMediatorConfigs(): Option
+    {
+        return Option::fromNullable($this->configs);
     }
 }

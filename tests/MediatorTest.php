@@ -14,6 +14,22 @@ use PHPUnit\Framework\TestCase;
 
 class MediatorTest extends TestCase
 {
+    public const CONFIGS = [
+        [
+            'query' => [
+                'middlewares' => [
+                    DummyQueryMiddleware::class
+                ]
+            ],
+            'command' => [
+                'middlewares' => [
+                    DummyCommandMiddleware::class
+                ]
+            ],
+
+        ]
+    ];
+
     private function findMediatorService(ContainerBuilder $container): MediatorInterface
     {
         $mediator = $container->get(MediatorInterface::class);
@@ -25,7 +41,7 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->addCompilerPass(new MediatorCompilerPass());
+        $container->addCompilerPass(new MediatorCompilerPass($extension));
         $extension->load([], $container);
         $container->compile();
         $mediator = $this->findMediatorService($container);
@@ -38,7 +54,7 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->addCompilerPass(new MediatorCompilerPass());
+        $container->addCompilerPass(new MediatorCompilerPass($extension));
         $extension->load([], $container);
         $container->compile();
         $mediator = $this->findMediatorService($container);
@@ -51,8 +67,8 @@ class MediatorTest extends TestCase
     {
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->addCompilerPass(new MediatorCompilerPass());
-        $extension->load([], $container);
+        $container->addCompilerPass(new MediatorCompilerPass($extension));
+        $extension->load(self::CONFIGS, $container);
         $container->compile();
 
         $mediator = $this->findMediatorService($container);
@@ -62,26 +78,10 @@ class MediatorTest extends TestCase
 
     public function testConfigs(): void
     {
-        $configs = [
-            [
-                'query' => [
-                    'middlewares' => [
-                        DummyQueryMiddleware::class
-                    ]
-                ],
-                'command' => [
-                    'middlewares' => [
-                        DummyCommandMiddleware::class
-                    ]
-                ],
-
-            ]
-        ];
-
         $extension = new MediatorExtension();
         $container = new ContainerBuilder();
-        $container->addCompilerPass(new MediatorCompilerPass());
-        $extension->load($configs, $container);
+        $container->addCompilerPass(new MediatorCompilerPass($extension));
+        $extension->load(self::CONFIGS, $container);
         $container->compile();
         $mediator = $this->findMediatorService($container);
         $this->assertEquals(1, 1);

@@ -4,7 +4,6 @@ namespace Whsv26\Mediator\Parsing;
 
 use Fp\Functional\Option\Option;
 use Fp\Functional\Unit;
-use Fp\Streams\Stream;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -12,9 +11,6 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
@@ -27,8 +23,8 @@ use function Fp\Json\regExpMatch;
 use function Fp\unit;
 
 /**
- * @psalm-type Request = string
- * @psalm-type RequestHandler = string
+ * @psalm-type Request = class-string
+ * @psalm-type RequestHandler = class-string
  * @psalm-type UseAlias = lowercase-string
  * @psalm-type UseFullyQualified = string
  */
