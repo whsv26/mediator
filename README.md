@@ -70,7 +70,7 @@ class CreateUserAction
         return $this->mediator->send(
             new CreateUserCommand(
                 'whsv26@gmail.com', 
-                '123456'
+                'plain-password'
             )
         );
     }
