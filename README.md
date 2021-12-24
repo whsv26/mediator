@@ -1,6 +1,6 @@
 ## Installation
 ```console
-composer require whsv26/mediator
+$ composer require whsv26/mediator
 ```
 
 ## Bundle configuration
