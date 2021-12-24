@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Fp\Collections\ArrayList;
+use Fp\Collections\HashSet;
 use Fp\Collections\Seq;
 use Fp\Functional\Option\Option;
 use Fp\Streams\Stream;
@@ -95,13 +95,12 @@ final class MediatorCompilerPass implements CompilerPassInterface
         $enabledMiddlewares = $this->extension
             ->flatMap(fn(MediatorExtension $ext) => $ext->getMediatorConfigs())
             ->map(fn($configs) => $configs['command']['middlewares'] ?? [])
-            ->toArrayList(fn(array $middlewares) => new ArrayList($middlewares))
-            ->toHashSet();
+            ->getOrElse([]);
 
         return $this
             ->findServiceClasses(CommandMiddlewareInterface::TAG)
             ->toHashSet()
-            ->intersect($enabledMiddlewares)
+            ->intersect(HashSet::collect($enabledMiddlewares))
             ->toArrayList()
             ->map(fn($middleware) => new Reference($middleware));
     }
@@ -114,13 +113,12 @@ final class MediatorCompilerPass implements CompilerPassInterface
         $enabledMiddlewares = $this->extension
             ->flatMap(fn(MediatorExtension $ext) => $ext->getMediatorConfigs())
             ->map(fn($configs) => $configs['query']['middlewares'] ?? [])
-            ->toArrayList(fn(array $middlewares) => new ArrayList($middlewares))
-            ->toHashSet();
+            ->getOrElse([]);
 
         return $this
             ->findServiceClasses(QueryMiddlewareInterface::TAG)
             ->toHashSet()
-            ->intersect($enabledMiddlewares)
+            ->intersect(HashSet::collect($enabledMiddlewares))
             ->toArrayList()
             ->map(fn($middleware) => new Reference($middleware));
     }
