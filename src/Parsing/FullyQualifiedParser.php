@@ -14,7 +14,7 @@ use PhpParser\Node\Stmt\UseUse;
  * @psalm-type UseAlias = lowercase-string
  * @psalm-type UseFullyQualified = string
  */
-class FullyQualifiedParser
+final class FullyQualifiedParser
 {
     /**
      * @var array<UseAlias, UseFullyQualified>

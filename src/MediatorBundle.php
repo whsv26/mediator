@@ -6,7 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Whsv26\Mediator\DependencyInjection\MediatorCompilerPass;
 
-class MediatorBundle extends Bundle
+final class MediatorBundle extends Bundle
 {
     public const ALIAS = 'mediator';
 

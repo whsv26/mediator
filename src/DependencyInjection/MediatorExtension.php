@@ -25,7 +25,7 @@ use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
  *     command: array{middlewares: list<class-string>}
  * }
  */
-class MediatorExtension extends Extension
+final class MediatorExtension extends Extension
 {
     /**
      * @param ?MediatorConfig $configs

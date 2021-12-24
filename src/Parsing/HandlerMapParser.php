@@ -28,7 +28,7 @@ use function Fp\unit;
  * @psalm-type UseAlias = lowercase-string
  * @psalm-type UseFullyQualified = string
  */
-class HandlerMapParser
+final class HandlerMapParser
 {
     private const REGEXP_REQUEST_TYPE = '/(?:@implements|@psalm-implements).*<.*,\s*(.*?)\s*>/';
 

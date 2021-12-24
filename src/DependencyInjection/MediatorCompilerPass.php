@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Whsv26\Mediator\DependencyInjection;
 
 use Fp\Collections\ArrayList;
-use Fp\Collections\HashSet;
 use Fp\Collections\Seq;
 use Fp\Functional\Option\Option;
 use Fp\Streams\Stream;
@@ -29,7 +28,7 @@ use function Fp\Evidence\proveOf;
 use function Fp\Evidence\proveString;
 use function Fp\Reflection\getReflectionClass;
 
-class MediatorCompilerPass implements CompilerPassInterface
+final class MediatorCompilerPass implements CompilerPassInterface
 {
     use PriorityTaggedServiceTrait;
 
