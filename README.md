@@ -9,7 +9,7 @@ $ composer require whsv26/mediator
 
 return static function (MediatorConfig $config) {
     $config->query()->middlewares([
-        SlowLogMiddleware::class
+        SlowLogQueryMiddleware::class
     ]);
     
     $config->command()->middlewares([
@@ -154,9 +154,11 @@ class TransactionalCommandMiddleware implements CommandMiddlewareInterface
         try {
             $res = $next($command);
             $this->connection->commit();
+            
             return $res;
         } catch (Throwable $e) {
             $this->connection->rollBack();
+            
             throw $e;
         }
     }
