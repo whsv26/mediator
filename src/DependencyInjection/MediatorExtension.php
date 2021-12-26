@@ -44,7 +44,7 @@ final class MediatorExtension extends Extension
     public function load(array $configs, ContainerBuilder $container): void
     {
         $this->loadServices($container);
-        $this->registerForAutoconfiguration($container);
+        $this->registerContractsForAutoconfiguration($container);
 
         /**
          * @var MediatorConfig $processedConfigs
@@ -64,7 +64,7 @@ final class MediatorExtension extends Extension
 
         $loader->load('services.php');
 
-        if ('test' === $_ENV['APP_ENV']) {
+        if ('test' === $_ENV['APP_ENV'] ?? getenv('APP_ENV')) {
             $loader->load('services_test.php');
         }
     }
@@ -78,7 +78,7 @@ final class MediatorExtension extends Extension
      * Then bundle compiler pass will be able to find these tagged services
      * and inject into mediator service.
      */
-    private function registerForAutoconfiguration(ContainerBuilder $container): void
+    private function registerContractsForAutoconfiguration(ContainerBuilder $container): void
     {
         $container
             ->registerForAutoconfiguration(CommandHandlerInterface::class)

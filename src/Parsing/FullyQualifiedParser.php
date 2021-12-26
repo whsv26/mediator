@@ -2,13 +2,19 @@
 
 namespace Whsv26\Mediator\Parsing;
 
+use Fp\Collections\ArrayList;
 use Fp\Functional\Option\Option;
 use Fp\Streams\Stream;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
+
+use function Fp\Collection\at;
+use function Fp\Evidence\proveNonEmptyString;
+use function Fp\Evidence\proveOf;
 
 /**
  * @psalm-type UseAlias = lowercase-string
@@ -32,9 +38,9 @@ final class FullyQualifiedParser
     public function parse(string|Name|Identifier $name): string
     {
         return match (true) {
-            $name instanceof Name => $this->fromName($name),
-            $name instanceof Identifier => $this->fromIdentifier($name),
-            default => $this->fromString($name)
+            $name instanceof Name => $this->parseName($name),
+            $name instanceof Identifier => $this->parseIdentifier($name),
+            default => $this->parseString($name)
         };
     }
 
@@ -70,59 +76,81 @@ final class FullyQualifiedParser
                 $useType = ($use->type !== Use_::TYPE_UNKNOWN ? $use->type : $stmt->type);
                 return Use_::TYPE_NORMAL === $useType;
             })
-            ->toHashMap(function(UseUse $use) {
+            ->toAssocArray(function (UseUse $use) {
                 $usePath = implode('\\', $use->name->parts);
                 $useAlias = $use->alias ? $use->alias->name : $use->name->getLast();
-
                 return [strtolower($useAlias), $usePath];
-            })
-            ->toAssocArray()
-            ->get();
+            });
     }
 
-    private function fromIdentifier(Identifier $id): string
+    private function parseIdentifier(Identifier $id): string
     {
         return $this->namespace
             ? $this->namespace . '\\' . $id->toString()
             : $id->toString();
     }
 
-    private function fromName(Name $className): string {
-
-        /** @var string|null */
-        $resolved_name = $className->getAttribute('resolvedName');
-
-        if ($resolved_name) {
-            return $resolved_name;
-        }
-
-        if ($className instanceof Name\FullyQualified) {
-            return implode('\\', $className->parts);
-        }
-
-        return $this->fromString(implode('\\', $className->parts));
+    private function parseName(Name $name): string
+    {
+        return proveNonEmptyString($name->getAttribute('resolvedName'))
+            ->orElse(fn() => proveOf($name, FullyQualified::class)
+                ->map(fn(FullyQualified $fq) => implode('\\', $fq->parts))
+            )
+            ->getOrCall(fn() => $this->parseString(implode('\\', $name->parts)));
     }
 
-    private function fromString(string $class): string
+    private function parseString(string $class): string
     {
-        $namespace = $this->namespace;
-        $uses = $this->uses;
+        return $this->whenFullyQualified($class)
+            ->orElse(fn() => $this->whenPartiallyQualified($class))
+            ->orElse(fn() => $this->whenUseAlias($class))
+            ->orElse(fn() => $this->whenNonGlobalNamespace($class))
+            ->getOrElse($class);
+    }
 
-        if (($class[0] ?? '') === '\\') {
-            return substr($class, 1);
-        }
+    /**
+     * @return Option<string>
+     */
+    private function whenFullyQualified(string $class): Option
+    {
+        return Option::condLazy(
+            str_starts_with($class, '\\'),
+            fn() => substr($class, 1)
+        );
+    }
 
-        if (str_contains($class, '\\')) {
-            $classParts = explode('\\', $class);
-            $firstNamespace = array_shift($classParts);
+    /**
+     * @return Option<string>
+     */
+    private function whenPartiallyQualified(string $class): Option
+    {
+        $classParts = ArrayList::collect(explode('\\', $class));
 
-            if (isset($uses[strtolower($firstNamespace)])) {
-                return $uses[strtolower($firstNamespace)] . '\\' . implode('\\', $classParts);
-            }
-        } elseif (isset($uses[strtolower($class)])) {
-            return $uses[strtolower($class)];
-        }
+        return $classParts
+            ->head()
+            ->map(fn($namespace) => strtolower($namespace))
+            ->filter(fn($alias) => isset($this->uses[$alias]))
+            ->map(fn($alias) => $classParts
+                ->drop(1)
+                ->map(fn($part) => '\\' . $part)
+                ->mkString(start: $this->uses[$alias], sep: '')
+            );
+    }
 
-        return ($namespace ? $namespace . '\\' : '') . $class;
+    /**
+     * @return Option<string>
+     */
+    private function whenUseAlias(string $class): Option
+    {
+        return at($this->uses, strtolower($class));
+    }
+
+    /**
+     * @return Option<string>
+     */
+    private function whenNonGlobalNamespace(string $class): Option
+    {
+        return proveNonEmptyString($this->namespace)
+            ->map(fn($ns) => $ns . '\\' . $class);
     }
 }
