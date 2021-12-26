@@ -14,12 +14,6 @@ use Whsv26\Mediator\Contract\QueryHandlerInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 
 /**
- * @psalm-type TQuery = class-string
- * @psalm-type TCommand = class-string
- * @psalm-type THandled = TQuery|TCommand
- * @psalm-type TQueryHandler = class-string
- * @psalm-type TCommandHandler = class-string
- * @psalm-type THandler = TQueryHandler|TCommandHandler
  * @psalm-type MediatorConfig = array{
  *     query: array{middlewares: list<class-string>},
  *     command: array{middlewares: list<class-string>}
@@ -37,6 +31,14 @@ final class MediatorExtension extends Extension
     public function getConfiguration(array $config, ContainerBuilder $container): ConfigurationInterface
     {
         return new Configuration();
+    }
+
+    /**
+     * @return Option<MediatorConfig>
+     */
+    public function getProcessedConfiguration(): Option
+    {
+        return Option::fromNullable($this->configs);
     }
 
     public function load(array $configs, ContainerBuilder $container): void
@@ -79,13 +81,5 @@ final class MediatorExtension extends Extension
         $container
             ->registerForAutoconfiguration(QueryMiddlewareInterface::class)
             ->addTag(QueryMiddlewareInterface::TAG);
-    }
-
-    /**
-     * @return Option<MediatorConfig>
-     */
-    public function getMediatorConfigs(): Option
-    {
-        return Option::fromNullable($this->configs);
     }
 }

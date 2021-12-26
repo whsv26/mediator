@@ -93,7 +93,7 @@ final class MediatorCompilerPass implements CompilerPassInterface
     private function findCommandMiddlewares(): Seq
     {
         $enabledMiddlewares = $this->extension
-            ->flatMap(fn(MediatorExtension $ext) => $ext->getMediatorConfigs())
+            ->flatMap(fn(MediatorExtension $ext) => $ext->getProcessedConfiguration())
             ->map(fn($configs) => $configs['command']['middlewares'] ?? [])
             ->getOrElse([]);
 
@@ -111,7 +111,7 @@ final class MediatorCompilerPass implements CompilerPassInterface
     private function findQueryMiddlewares(): Seq
     {
         $enabledMiddlewares = $this->extension
-            ->flatMap(fn(MediatorExtension $ext) => $ext->getMediatorConfigs())
+            ->flatMap(fn(MediatorExtension $ext) => $ext->getProcessedConfiguration())
             ->map(fn($configs) => $configs['query']['middlewares'] ?? [])
             ->getOrElse([]);
 
