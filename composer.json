@@ -2,7 +2,7 @@
     "name": "whsv26/mediator",
     "type": "symfony-bundle",
     "require": {
-        "whsv26/functional": "^4.9",
+        "whsv26/functional": "^4.14",
         "nikic/php-parser": "^4.13"
     },
     "require-dev": {
