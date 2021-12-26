@@ -38,9 +38,9 @@ final class FullyQualifiedParser
     public function parse(string|Name|Identifier $name): string
     {
         return match (true) {
-            $name instanceof Name => $this->parseName($name),
-            $name instanceof Identifier => $this->parseIdentifier($name),
-            default => $this->parseString($name)
+            $name instanceof Name => $this->parseFQCNFromName($name),
+            $name instanceof Identifier => $this->parseFQCNFromIdentifier($name),
+            default => $this->parseFQCNFromString($name)
         };
     }
 
@@ -83,27 +83,27 @@ final class FullyQualifiedParser
             });
     }
 
-    private function parseIdentifier(Identifier $id): string
+    private function parseFQCNFromIdentifier(Identifier $id): string
     {
         return $this->namespace
             ? $this->namespace . '\\' . $id->toString()
             : $id->toString();
     }
 
-    private function parseName(Name $name): string
+    private function parseFQCNFromName(Name $name): string
     {
         return proveNonEmptyString($name->getAttribute('resolvedName'))
             ->orElse(fn() => proveOf($name, FullyQualified::class)
                 ->map(fn(FullyQualified $fq) => implode('\\', $fq->parts))
             )
-            ->getOrCall(fn() => $this->parseString(implode('\\', $name->parts)));
+            ->getOrCall(fn() => $this->parseFQCNFromString(implode('\\', $name->parts)));
     }
 
-    private function parseString(string $class): string
+    private function parseFQCNFromString(string $class): string
     {
         return $this->whenFullyQualified($class)
             ->orElse(fn() => $this->whenQualified($class))
-            ->orElse(fn() => $this->whenUseAlias($class))
+            ->orElse(fn() => $this->whenUseTarget($class))
             ->orElse(fn() => $this->whenRelative($class))
             ->getOrElse($class);
     }
@@ -140,7 +140,7 @@ final class FullyQualifiedParser
     /**
      * @return Option<string>
      */
-    private function whenUseAlias(string $class): Option
+    private function whenUseTarget(string $class): Option
     {
         return at($this->uses, strtolower($class));
     }
@@ -151,6 +151,6 @@ final class FullyQualifiedParser
     private function whenRelative(string $class): Option
     {
         return proveNonEmptyString($this->namespace)
-            ->map(fn($ns) => $ns . '\\' . $class);
+            ->map(fn($namespace) => $namespace . '\\' . $class);
     }
 }
