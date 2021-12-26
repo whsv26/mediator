@@ -15,8 +15,8 @@ use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 
 /**
  * @psalm-type MediatorConfig = array{
- *     query: array{middlewares: list<class-string>},
- *     command: array{middlewares: list<class-string>}
+ *     query?: array{middlewares: list<class-string>},
+ *     command?: array{middlewares: list<class-string>}
  * }
  */
 final class MediatorExtension extends Extension
@@ -43,17 +43,7 @@ final class MediatorExtension extends Extension
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $configDir = new FileLocator(__DIR__ . '/../../config');
-
-        // Load the bundle's service declarations
-        $loader = new PhpFileLoader($container, $configDir);
-
-        $loader->load('services.php');
-
-        if ('test' === $_ENV['APP_ENV']) {
-            $loader->load('services_test.php');
-        }
-
+        $this->loadServices($container);
         $this->registerForAutoconfiguration($container);
 
         /**
@@ -64,6 +54,30 @@ final class MediatorExtension extends Extension
         $this->configs = $processedConfigs;
     }
 
+    /**
+     * Load the bundle's service declarations
+     */
+    private function loadServices(ContainerBuilder $container): void
+    {
+        $configDir = new FileLocator(__DIR__ . '/../../config');
+        $loader = new PhpFileLoader($container, $configDir);
+
+        $loader->load('services.php');
+
+        if ('test' === $_ENV['APP_ENV']) {
+            $loader->load('services_test.php');
+        }
+    }
+
+    /**
+     * Register bundle contract interfaces for autoconfiguration.
+     *
+     * Services which implement these interfaces will be tagged
+     * with corresponding tags.
+     *
+     * Then bundle compiler pass will be able to find these tagged services
+     * and inject into mediator service.
+     */
     private function registerForAutoconfiguration(ContainerBuilder $container): void
     {
         $container
