@@ -102,9 +102,9 @@ final class FullyQualifiedParser
     private function parseString(string $class): string
     {
         return $this->whenFullyQualified($class)
-            ->orElse(fn() => $this->whenPartiallyQualified($class))
+            ->orElse(fn() => $this->whenQualified($class))
             ->orElse(fn() => $this->whenUseAlias($class))
-            ->orElse(fn() => $this->whenNonGlobalNamespace($class))
+            ->orElse(fn() => $this->whenRelative($class))
             ->getOrElse($class);
     }
 
@@ -113,7 +113,7 @@ final class FullyQualifiedParser
      */
     private function whenFullyQualified(string $class): Option
     {
-        return Option::condLazy(
+        return Option::when(
             str_starts_with($class, '\\'),
             fn() => substr($class, 1)
         );
@@ -122,7 +122,7 @@ final class FullyQualifiedParser
     /**
      * @return Option<string>
      */
-    private function whenPartiallyQualified(string $class): Option
+    private function whenQualified(string $class): Option
     {
         $classParts = ArrayList::collect(explode('\\', $class));
 
@@ -148,7 +148,7 @@ final class FullyQualifiedParser
     /**
      * @return Option<string>
      */
-    private function whenNonGlobalNamespace(string $class): Option
+    private function whenRelative(string $class): Option
     {
         return proveNonEmptyString($this->namespace)
             ->map(fn($ns) => $ns . '\\' . $class);
