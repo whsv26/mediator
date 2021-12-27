@@ -11,6 +11,7 @@ use Whsv26\Tests\Dummy\DummyCommandOne;
 use Whsv26\Tests\Dummy\DummyQueryMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryOne;
 use PHPUnit\Framework\TestCase;
+use Whsv26\Tests\Dummy\DummyQueryThree;
 
 class MediatorTest extends TestCase
 {
@@ -48,6 +49,19 @@ class MediatorTest extends TestCase
         $response = $mediator->send(new DummyQueryOne());
 
         $this->assertEquals(1, $response->value);
+    }
+
+    public function testNestedQuerySending(): void
+    {
+        $extension = new MediatorExtension();
+        $container = new ContainerBuilder();
+        $container->addCompilerPass(new MediatorCompilerPass($extension));
+        $extension->load([], $container);
+        $container->compile();
+        $mediator = $this->findMediatorService($container);
+        $response = $mediator->send(new DummyQueryThree());
+
+        $this->assertEquals(2, $response->value);
     }
 
     public function testCommandSending(): void

@@ -7,6 +7,7 @@ use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\Mediator;
 use Whsv26\Tests\Dummy\DummyCommandMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryMiddleware;
+use Whsv26\Tests\Dummy\DummyQueryThreeHandler;
 use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
 use Whsv26\Tests\Dummy\DummyService;
 use Whsv26\Tests\Dummy\DummyCommandOneHandler;
@@ -32,8 +33,12 @@ return static function (ContainerConfigurator $configurator) {
 
     $services->set(DummyQueryOneHandler::class);
     $services->set(DummyQueryTwoHandler::class);
+    $services->set(DummyQueryThreeHandler::class);
+
     $services->set(DummyCommandOneHandler::class);
     $services->set(DummyCommandMiddleware::class);
+
     $services->set(DummyQueryMiddleware::class);
+
     $services->set(DummyService::class)->args([1]);
 };
