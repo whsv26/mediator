@@ -8,6 +8,9 @@ use Closure;
 use Whsv26\Mediator\Contract\CommandInterface;
 use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
 
+/**
+ * @internal
+ */
 class DummyCommandMiddleware implements CommandMiddlewareInterface
 {
     public function __construct(

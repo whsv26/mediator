@@ -8,6 +8,9 @@ use Closure;
 use Whsv26\Mediator\Contract\QueryInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 
+/**
+ * @internal
+ */
 class FooQueryMiddleware implements QueryMiddlewareInterface
 {
     /**

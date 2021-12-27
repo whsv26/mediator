@@ -6,6 +6,7 @@ use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\Contract\QueryHandlerInterface;
 
 /**
+ * @internal
  * @implements QueryHandlerInterface<Foo, DummyQueryThree>
  */
 class DummyQueryThreeHandler implements QueryHandlerInterface

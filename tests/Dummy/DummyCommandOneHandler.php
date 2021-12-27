@@ -6,6 +6,7 @@ use Fp\Functional\Either\Either;
 use Whsv26\Mediator\Contract\CommandHandlerInterface;
 
 /**
+ * @internal
  * @implements CommandHandlerInterface<Either<false, true>, DummyCommandOne>
  */
 class DummyCommandOneHandler implements CommandHandlerInterface
