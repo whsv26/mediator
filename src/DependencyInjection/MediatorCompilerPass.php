@@ -53,16 +53,16 @@ final class MediatorCompilerPass implements CompilerPassInterface
     {
         $this->container = Option::some($container);
 
-        $commandMiddlewares = $this->findCommandMiddlewares();
-        $queryMiddlewares = $this->findQueryMiddlewares();
+        $commandMiddlewares = $this->findCommandMiddlewares()->toArray();
+        $queryMiddlewares = $this->findQueryMiddlewares()->toArray();
         $handlerMap = $this->parseHandlerMap(new HandlerMapParser());
 
         $container
             ->getDefinition(MediatorInterface::class)
             ->setArguments([
                 new ServiceLocatorArgument($handlerMap),
-                new IteratorArgument($commandMiddlewares->reverse()->toArray()),
-                new IteratorArgument($queryMiddlewares->reverse()->toArray()),
+                new IteratorArgument($commandMiddlewares),
+                new IteratorArgument($queryMiddlewares),
             ]);
     }
 

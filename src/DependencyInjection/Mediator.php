@@ -40,8 +40,8 @@ final class Mediator implements MediatorInterface
         iterable $commandPipes,
         iterable $queryPipes,
     ) {
-        $this->commandPipes = ArrayList::collect($commandPipes);
-        $this->queryPipes = ArrayList::collect($queryPipes);
+        $this->commandPipes = ArrayList::collect($commandPipes)->reverse();
+        $this->queryPipes = ArrayList::collect($queryPipes)->reverse();
     }
 
     /**
