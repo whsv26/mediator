@@ -6,9 +6,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Whsv26\Mediator\Contract\MediatorInterface;
 use Whsv26\Mediator\DependencyInjection\MediatorCompilerPass;
 use Whsv26\Mediator\DependencyInjection\MediatorExtension;
+use Whsv26\Tests\Dummy\BarQueryMiddleware;
 use Whsv26\Tests\Dummy\DummyCommandMiddleware;
 use Whsv26\Tests\Dummy\DummyCommandOne;
-use Whsv26\Tests\Dummy\DummyQueryMiddleware;
+use Whsv26\Tests\Dummy\FooQueryMiddleware;
 use Whsv26\Tests\Dummy\DummyQueryOne;
 use PHPUnit\Framework\TestCase;
 use Whsv26\Tests\Dummy\DummyQueryThree;
@@ -19,7 +20,8 @@ class MediatorTest extends TestCase
         [
             'query' => [
                 'middlewares' => [
-                    DummyQueryMiddleware::class
+                    FooQueryMiddleware::class,
+                    BarQueryMiddleware::class,
                 ]
             ],
             'command' => [
@@ -87,7 +89,7 @@ class MediatorTest extends TestCase
 
         $mediator = $this->findMediatorService($container);
         $mediator->send(new DummyQueryOne());
-        $this->expectOutputString("before_query_middleware after_query_middleware");
+        $this->expectOutputString('<foo><bar></bar></foo>');
     }
 
     public function testConfigs(): void

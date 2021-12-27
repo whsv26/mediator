@@ -8,7 +8,7 @@ use Closure;
 use Whsv26\Mediator\Contract\QueryInterface;
 use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 
-class DummyQueryMiddleware implements QueryMiddlewareInterface
+class BarQueryMiddleware implements QueryMiddlewareInterface
 {
     /**
      * @template TResponse
@@ -21,11 +21,11 @@ class DummyQueryMiddleware implements QueryMiddlewareInterface
      */
     public function handle(QueryInterface $query, Closure $next): mixed
     {
-        echo 'before_query_middleware ';
+        echo '<bar>';
 
         $result = $next($query);
 
-        echo 'after_query_middleware';
+        echo '</bar>';
 
         return $result;
     }

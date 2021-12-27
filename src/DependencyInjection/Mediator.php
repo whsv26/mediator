@@ -68,12 +68,10 @@ final class Mediator implements MediatorInterface
         /**
          * @psalm-suppress MixedArgument
          */
-        $pipeline = $pipes
-            ->reverse()
-            ->fold(
-                fn($req) => $handler->handle($req),
-                fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
-            );
+        $pipeline = $pipes->fold(
+            fn($req) => $handler->handle($req),
+            fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
+        );
 
         /** @var TResponse */
         return $pipeline($request);

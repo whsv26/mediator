@@ -53,16 +53,16 @@ final class MediatorCompilerPass implements CompilerPassInterface
     {
         $this->container = Option::some($container);
 
-        $commandMiddlewares = $this->findCommandMiddlewares()->toArray();
-        $queryMiddlewares = $this->findQueryMiddlewares()->toArray();
+        $commandMiddlewares = $this->findCommandMiddlewares();
+        $queryMiddlewares = $this->findQueryMiddlewares();
         $handlerMap = $this->parseHandlerMap(new HandlerMapParser());
 
         $container
             ->getDefinition(MediatorInterface::class)
             ->setArguments([
                 new ServiceLocatorArgument($handlerMap),
-                new IteratorArgument($commandMiddlewares),
-                new IteratorArgument($queryMiddlewares),
+                new IteratorArgument($commandMiddlewares->reverse()->toArray()),
+                new IteratorArgument($queryMiddlewares->reverse()->toArray()),
             ]);
     }
 
@@ -92,15 +92,15 @@ final class MediatorCompilerPass implements CompilerPassInterface
      */
     private function findCommandMiddlewares(): Seq
     {
+        $taggedMiddlewares = $this->findServiceClasses(CommandMiddlewareInterface::TAG);
+
         $enabledMiddlewares = $this->extension
             ->flatMap(fn(MediatorExtension $ext) => $ext->getProcessedConfiguration())
             ->map(fn($configs) => $configs['command']['middlewares'] ?? [])
             ->getOrElse([]);
 
-        return $this
-            ->findServiceClasses(CommandMiddlewareInterface::TAG)
-            ->toHashSet()
-            ->intersect(HashSet::collect($enabledMiddlewares))
+        return HashSet::collect($enabledMiddlewares)
+            ->intersect($taggedMiddlewares->toHashSet())
             ->toArrayList()
             ->map(fn($middleware) => new Reference($middleware));
     }
@@ -110,15 +110,15 @@ final class MediatorCompilerPass implements CompilerPassInterface
      */
     private function findQueryMiddlewares(): Seq
     {
+        $taggedMiddlewares = $this->findServiceClasses(QueryMiddlewareInterface::TAG);
+
         $enabledMiddlewares = $this->extension
             ->flatMap(fn(MediatorExtension $ext) => $ext->getProcessedConfiguration())
             ->map(fn($configs) => $configs['query']['middlewares'] ?? [])
             ->getOrElse([]);
 
-        return $this
-            ->findServiceClasses(QueryMiddlewareInterface::TAG)
-            ->toHashSet()
-            ->intersect(HashSet::collect($enabledMiddlewares))
+        return HashSet::collect($enabledMiddlewares)
+            ->intersect($taggedMiddlewares->toHashSet())
             ->toArrayList()
             ->map(fn($middleware) => new Reference($middleware));
     }
