@@ -12,7 +12,7 @@ use Whsv26\Tests\Dummy\DummyQueryOneHandler;
 use Whsv26\Tests\Dummy\DummyQueryTwo;
 use Whsv26\Tests\Dummy\DummyQueryTwoHandler;
 
-class RoutingMapParserTest extends TestCase
+class HandlerMapParserTest extends TestCase
 {
     public function testParsing(): void
     {
