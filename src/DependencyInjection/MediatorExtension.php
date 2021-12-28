@@ -64,7 +64,7 @@ final class MediatorExtension extends Extension
 
         $loader->load('services.php');
 
-        if ('test' === $_ENV['APP_ENV'] ?? getenv('APP_ENV')) {
+        if ('test' === ($_ENV['APP_ENV'] ?? getenv('APP_ENV'))) {
             $loader->load('services_test.php');
         }
     }
