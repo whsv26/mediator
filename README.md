@@ -34,29 +34,37 @@ class CreateUserCommand implements CommandInterface
 /**
  * NOTE: You need to register CreateUserCommandHandler as service
  * 
- * @implements CommandHandlerInterface<Either<Rejection, Success>, CreateUserCommand>
+ * @implements CommandHandlerInterface<UserCreated, CreateUserCommand>
  */
 class CreateUserCommandHandler implements CommandHandlerInterface
 {
     public function __construct(
-        private readonly UserRepository $users
+        private readonly UserRepository $users,
+        private readonly HasherInterface $hasher,
+        private readonly ClockInterface $clock
     ) { }
 
     /**
      * @param CreateUserCommand $command
-     * @return Either<Rejection, Success>
+     * @return UserCreated
      */
-    public function handle($command): Either
+    public function handle($command): UserCreated
     {
         $user = new User(
             Id::next(),
             new Email($command->email),
-            new PlainPassword($command->password)
+            new PlainPassword($command->password),
+            $this->hasher,
+            $this->clock,
         );
 
         $this->users->save($user);
 
-        return Either::right(new Success());
+        return new UserCreated(
+            $user->getId()->value,
+            $user->getEmail()->value,
+            $user->getCreatedAt()->toW3cString()
+        );
     }
 }
 
@@ -67,16 +75,15 @@ class CreateUserAction
     ) { }
 
     #[Route(path: '/users', name: self::class, methods: ['POST'])]
-    public function __invoke(): Either
+    public function __invoke(CreateUserCommand $createUser): UserCreated
     {
-        return $this->mediator->send(
-            new CreateUserCommand(
-                'whsv26@gmail.com', 
-                'plain-password'
-            )
-        );
+        // $createUser deserialized from request body
+        // via custom controller argument value resolver
+    
+        return $this->mediator->send($createUser);
     }
 }
+
 ```
 
 ## Queries
@@ -100,7 +107,7 @@ class FindUserQuery implements QueryInterface
 class FindUserQueryHandler implements QueryHandlerInterface
 {
     public function __construct(
-        private readonly UserRepository $users,
+        private readonly UserRepository $users
     ) { }
 
     /**
@@ -135,7 +142,7 @@ class FindUserQueryHandler implements QueryHandlerInterface
 class TransactionalCommandMiddleware implements CommandMiddlewareInterface
 {
     public function __construct(
-        private Connection $connection
+        private readonly Connection $connection
     ) { }
 
     /**
