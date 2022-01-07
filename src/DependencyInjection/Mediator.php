@@ -2,47 +2,24 @@
 
 namespace Whsv26\Mediator\DependencyInjection;
 
-use Fp\Collections\ArrayList;
-use Fp\Collections\Seq;
-use Symfony\Component\DependencyInjection\ServiceLocator;
-use Whsv26\Mediator\Contract\CommandHandlerInterface;
-use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
+use Fp\Functional\Option\Option;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Whsv26\Mediator\Contract\CommandInterface;
 use Whsv26\Mediator\Contract\MediatorInterface;
-use Whsv26\Mediator\Contract\QueryHandlerInterface;
-use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
+use Whsv26\Mediator\Contract\QueryInterface;
 use Whsv26\Mediator\Contract\RequestInterface;
-use Whsv26\Mediator\Exception\RequestHandlerNotFoundException;
 
 /**
  * @internal
- * @psalm-type Request = class-string
- * @psalm-type RequestHandler = class-string
- * @psalm-type RequestHandlerInterface = (CommandHandlerInterface|QueryHandlerInterface)
  */
 final class Mediator implements MediatorInterface
 {
-    /**
-     * @var Seq<CommandMiddlewareInterface>
-     */
-    private Seq $commandPipes;
-
-    /**
-     * @var Seq<QueryMiddlewareInterface>
-     */
-    private Seq $queryPipes;
-
-    /**
-     * @param iterable<CommandMiddlewareInterface> $commandPipes
-     * @param iterable<QueryMiddlewareInterface> $queryPipes
-     */
     public function __construct(
-        private ServiceLocator $locator,
-        iterable $commandPipes,
-        iterable $queryPipes,
-    ) {
-        $this->commandPipes = ArrayList::collect($commandPipes)->reverse();
-        $this->queryPipes = ArrayList::collect($queryPipes)->reverse();
-    }
+        private MessageBusInterface $queryBus,
+        private MessageBusInterface $commandBus,
+        private MessageBusInterface $eventBus,
+    ) { }
 
     /**
      * @template TResponse
@@ -51,29 +28,54 @@ final class Mediator implements MediatorInterface
      */
     public function send(RequestInterface $request): mixed
     {
-        /**
-         * @var null|RequestHandlerInterface $handler
-         */
-        $handler = $this->locator->get($request::class);
-
-        if (empty($handler)) {
-            throw new RequestHandlerNotFoundException();
-        }
-
-        $pipes = match (true) {
-            $handler instanceof CommandHandlerInterface => $this->commandPipes,
-            $handler instanceof QueryHandlerInterface => $this->queryPipes,
+        /** @var TResponse */
+        return match (true) {
+            $request instanceof CommandInterface => $this->sendCommand($request),
+            $request instanceof QueryInterface => $this->sendQuery($request),
         };
+    }
 
-        /**
-         * @psalm-suppress MixedArgument
-         */
-        $pipeline = $pipes->fold(
-            fn($req) => $handler->handle($req),
-            fn($acc, $cur) => fn($req) => $cur->handle($req, $acc)
-        );
+    /**
+     * @template TResponse
+     * @param CommandInterface<TResponse> $command
+     * @return TResponse
+     */
+    public function sendCommand(CommandInterface $command): mixed
+    {
+        $envelope = $this->commandBus->dispatch($command);
+        $stamp = $envelope->last(HandledStamp::class);
 
         /** @var TResponse */
-        return $pipeline($request);
+        return Option::fromNullable($stamp)
+            ->filterOf(HandledStamp::class)
+            ->map(fn(HandledStamp $stamp): mixed => $stamp->getResult())
+            ->getUnsafe();
+    }
+
+    /**
+     * @template TResponse
+     * @param QueryInterface<TResponse> $query
+     * @return TResponse
+     */
+    public function sendQuery(QueryInterface $query): mixed
+    {
+        $envelope = $this->queryBus->dispatch($query);
+        $stamp = $envelope->last(HandledStamp::class);
+
+        /** @var TResponse */
+        return Option::fromNullable($stamp)
+            ->filterOf(HandledStamp::class)
+            ->map(fn(HandledStamp $stamp): mixed => $stamp->getResult())
+            ->getUnsafe();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function publish(iterable $events): void
+    {
+        foreach ($events as $event) {
+            $this->eventBus->dispatch($event);
+        }
     }
 }

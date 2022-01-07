@@ -8,15 +8,14 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use Whsv26\Mediator\Contract\CommandHandlerInterface;
-use Whsv26\Mediator\Contract\CommandMiddlewareInterface;
-use Whsv26\Mediator\Contract\QueryHandlerInterface;
-use Whsv26\Mediator\Contract\QueryMiddlewareInterface;
 
 /**
  * @psalm-type MediatorConfig = array{
- *     query?: array{middlewares: list<class-string>},
- *     command?: array{middlewares: list<class-string>}
+ *     bus: array{
+ *         query: string,
+ *         command: string,
+ *         event: string
+ *     }
  * }
  */
 final class MediatorExtension extends Extension
@@ -44,7 +43,6 @@ final class MediatorExtension extends Extension
     public function load(array $configs, ContainerBuilder $container): void
     {
         $this->loadServices($container);
-        $this->registerContractsForAutoconfiguration($container);
 
         /**
          * @var MediatorConfig $processedConfigs
@@ -67,33 +65,5 @@ final class MediatorExtension extends Extension
         if ('test' === ($_ENV['APP_ENV'] ?? getenv('APP_ENV'))) {
             $loader->load('services_test.php');
         }
-    }
-
-    /**
-     * Register bundle contract interfaces for autoconfiguration.
-     *
-     * Services which implement these interfaces will be tagged
-     * with corresponding tags.
-     *
-     * Then bundle compiler pass will be able to find these tagged services
-     * and inject into mediator service.
-     */
-    private function registerContractsForAutoconfiguration(ContainerBuilder $container): void
-    {
-        $container
-            ->registerForAutoconfiguration(CommandHandlerInterface::class)
-            ->addTag(CommandHandlerInterface::TAG);
-
-        $container
-            ->registerForAutoconfiguration(QueryHandlerInterface::class)
-            ->addTag(QueryHandlerInterface::TAG);
-
-        $container
-            ->registerForAutoconfiguration(CommandMiddlewareInterface::class)
-            ->addTag(CommandMiddlewareInterface::TAG);
-
-        $container
-            ->registerForAutoconfiguration(QueryMiddlewareInterface::class)
-            ->addTag(QueryMiddlewareInterface::TAG);
     }
 }
