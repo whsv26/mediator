@@ -9,8 +9,8 @@ use Psalm\CodeLocation;
 use Psalm\Internal\Provider\ClassLikeStorageProvider;
 use Psalm\Issue\InvalidReturnType;
 use Psalm\IssueBuffer;
-use Psalm\Plugin\EventHandler\AfterClassLikeVisitInterface;
-use Psalm\Plugin\EventHandler\Event\AfterClassLikeVisitEvent;
+use Psalm\Plugin\EventHandler\AfterClassLikeAnalysisInterface;
+use Psalm\Plugin\EventHandler\Event\AfterClassLikeAnalysisEvent;
 use Psalm\Storage\ClassLikeStorage;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Storage\MethodStorage;
@@ -30,12 +30,12 @@ use function Fp\Evidence\proveFalse;
 /**
  * @psalm-suppress InternalMethod,InternalProperty
  */
-class MessageHandlerReturnTypeValidator implements AfterClassLikeVisitInterface
+class MessageHandlerReturnTypeValidator implements AfterClassLikeAnalysisInterface
 {
-    public static function afterClassLikeVisit(AfterClassLikeVisitEvent $event)
+    public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): void
     {
         Option::do(function () use ($event) {
-            $handlerMethod = yield Option::some($event->getStorage())
+            $handlerMethod = yield Option::some($event->getClasslikeStorage())
                 ->filter(fn(ClassLikeStorage $store) => array_key_exists(
                     strtolower(MessageHandlerInterface::class),
                     $store->class_implements
@@ -52,7 +52,6 @@ class MessageHandlerReturnTypeValidator implements AfterClassLikeVisitInterface
                 ->map(fn(TNamedObject $object) => $object->value);
 
             $codebase = $event->getCodebase();
-            $codebase->scanFiles();
 
             $messageReturnType = yield Option::some($codebase->classlike_storage_provider)
                 ->filter(fn(ClassLikeStorageProvider $provider) => $provider->has($messageClass))
