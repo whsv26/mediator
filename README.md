@@ -8,20 +8,24 @@ $ composer require whsv26/mediator
 // config/packages/mediator.php
 
 return static function (MediatorConfig $config) {
-    $config->query()->middlewares([
-        SlowLogQueryMiddleware::class
-    ]);
-    
-    $config->command()->middlewares([
-        TransactionalCommandMiddleware::class
-    ]);
+    $config->bus()
+        ->query('query.bus') // query bus service id
+        ->command('command.bus') // command bus service id
+        ->event('event.bus'); // event bus service id
 };
+```
+
+### Enable psalm plugin (optional)
+To check command and query return type compatibility with corresponding handler return type
+
+```console
+$ vendor/bin/psalm-plugin enable Whsv26\\Mediator\\Psalm\\MediatorPlugin
 ```
 
 ## Commands
 ```php
 /**
- * @implements CommandInterface<Either<Rejection, Success>>
+ * @implements CommandInterface<UserId>
  */
 class CreateUserCommand implements CommandInterface
 {
@@ -31,40 +35,31 @@ class CreateUserCommand implements CommandInterface
     ) { }
 }
 
-/**
- * NOTE: You need to register CreateUserCommandHandler as service
- * 
- * @implements CommandHandlerInterface<UserCreated, CreateUserCommand>
- */
-class CreateUserCommandHandler implements CommandHandlerInterface
+class CreateUserCommandHandler implements MessageHandlerInterface
 {
     public function __construct(
         private readonly UserRepository $users,
         private readonly HasherInterface $hasher,
-        private readonly ClockInterface $clock
+        private readonly ClockInterface $clock,
+        private readonly MediatorInterface $mediator,
     ) { }
 
-    /**
-     * @param CreateUserCommand $command
-     * @return UserCreated
-     */
-    public function handle($command): UserCreated
+    public function __invoke(CreateUserCommand $command): UserId
     {
         $user = new User(
-            Id::next(),
+            UserId::next(),
             new Email($command->email),
             new PlainPassword($command->password),
             $this->hasher,
-            $this->clock,
+            $this->clock
         );
 
         $this->users->save($user);
 
-        return new UserCreated(
-            $user->getId()->value,
-            $user->getEmail()->value,
-            $user->getCreatedAt()->toW3cString()
-        );
+        // Publish domain events to subscribers 
+        $this->mediator->publish($user->pullDomainEvents());
+
+        return $user->getId();
     }
 }
 
@@ -75,12 +70,14 @@ class CreateUserAction
     ) { }
 
     #[Route(path: '/users', name: self::class, methods: ['POST'])]
-    public function __invoke(CreateUserCommand $createUser): UserCreated
+    public function __invoke(CreateUserCommand $createUser): string
     {
         // $createUser deserialized from request body
         // via custom controller argument value resolver
     
-        return $this->mediator->send($createUser);
+        return $this->mediator
+            ->sendCommand($createUser)
+            ->value;
     }
 }
 
@@ -99,75 +96,25 @@ class FindUserQuery implements QueryInterface
     ) { }
 }
 
-/**
- * NOTE: You need to register FindUserQueryHandler as service
- * 
- * @implements QueryHandlerInterface<Option<User>, FindUserQuery>
- */
-class FindUserQueryHandler implements QueryHandlerInterface
+class FindUserQueryHandler implements MessageHandlerInterface
 {
     public function __construct(
-        private readonly UserRepository $users
+        private readonly UserRepository $users,
     ) { }
 
     /**
      * @param FindUserQuery $query
      * @return Option<User>
      */
-    public function handle($query): Option
+    public function __invoke(FindUserQuery $query): Option
     {
         return Option::fromNullable($query->id)
-            ->map(fn(string $id) => new Id($id))
-            ->flatMap(fn(Id $id) => $this->users->findById($id))
+            ->map(fn(string $id) => new UserId($id))
+            ->flatMap(fn(UserId $id) => $this->users->findById($id))
             ->orElse(fn() => Option::fromNullable($query->email)
                 ->map(fn(string $email) => new Email($email))
                 ->flatMap(fn(Email $email) => $this->users->findByEmail($email))
             );
-    }
-}
-```
-
-## Middlewares
-1) Implement ```CommandMiddlewareInterface``` or ```QueryMiddlewareInterface```
-2) Register middleware class as service
-3) Enable middleware services in bundle config
-
-```php
-
-/**
- * Example command middleware
- * 
- * NOTE: You need to register TransactionalCommandMiddleware as service
- */
-class TransactionalCommandMiddleware implements CommandMiddlewareInterface
-{
-    public function __construct(
-        private readonly Connection $connection
-    ) { }
-
-    /**
-     * @template TResponse
-     * @template TCommand of CommandInterface<TResponse>
-     *
-     * @param TCommand $command
-     * @param Closure(TCommand): TResponse $next
-     *
-     * @return TResponse
-     */
-    public function handle(CommandInterface $command, Closure $next): mixed
-    {
-        $this->connection->beginTransaction();
-
-        try {
-            $res = $next($command);
-            $this->connection->commit();
-            
-            return $res;
-        } catch (Throwable $e) {
-            $this->connection->rollBack();
-            
-            throw $e;
-        }
     }
 }
 ```
