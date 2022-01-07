@@ -9,10 +9,10 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+use Symfony\Component\DependencyInjection\Reference;
 use Whsv26\Mediator\Contract\MediatorInterface;
 
 use function Fp\Evidence\proveOf;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 final class MediatorCompilerPass implements CompilerPassInterface
 {
@@ -47,9 +47,9 @@ final class MediatorCompilerPass implements CompilerPassInterface
         $container
             ->getDefinition(MediatorInterface::class)
             ->setArguments([
-                service($buses['query']),
-                service($buses['command']),
-                service($buses['event']),
+                new Reference($buses['query']),
+                new Reference($buses['command']),
+                new Reference($buses['event']),
             ]);
     }
 }
