@@ -6,6 +6,7 @@ namespace Whsv26\Mediator\Psalm;
 
 use Psalm\Plugin\PluginEntryPointInterface;
 use Psalm\Plugin\RegistrationInterface;
+use SimpleXMLElement;
 
 /**
  * Plugin entrypoint
