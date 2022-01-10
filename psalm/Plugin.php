@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+namespace Whsv26\Mediator\Psalm;
 
 use Psalm\Plugin\PluginEntryPointInterface;
 use Psalm\Plugin\RegistrationInterface;
