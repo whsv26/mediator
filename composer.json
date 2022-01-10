@@ -3,7 +3,6 @@
     "type": "symfony-bundle",
     "require": {
         "whsv26/functional": "^4.14",
-        "nikic/php-parser": "^4.13",
         "ext-simplexml": "*"
     },
     "require-dev": {
@@ -18,7 +17,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Whsv26\\Mediator\\": "src/"
+            "Whsv26\\Mediator\\": "src/",
+            "Whsv26\\Mediator\\Psalm\\": "psalm/"
         }
     },
     "autoload-dev": {

@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Whsv26\Mediator\Psalm;
 
 use Psalm\Plugin\PluginEntryPointInterface;
 use Psalm\Plugin\RegistrationInterface;
-use SimpleXMLElement;
 
 /**
  * Plugin entrypoint
  */
-class MediatorPlugin implements PluginEntryPointInterface
+class Plugin implements PluginEntryPointInterface
 {
     public function __invoke(RegistrationInterface $registration, ?SimpleXMLElement $config = null): void
     {

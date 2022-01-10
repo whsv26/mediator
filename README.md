@@ -19,7 +19,7 @@ return static function (MediatorConfig $config) {
 To check command and query return type compatibility with corresponding handler return type
 
 ```console
-$ vendor/bin/psalm-plugin enable Whsv26\\Mediator\\Psalm\\MediatorPlugin
+$ vendor/bin/psalm-plugin enable Whsv26\\Mediator\\Psalm\\Plugin
 ```
 
 ## Commands
